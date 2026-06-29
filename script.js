@@ -817,9 +817,10 @@ function renderRecipes(filter = '') {
       <div class="segment">
         <button class="seg-btn active" onclick="filterRecipeType('all',this)">Όλες</button>
         <button class="seg-btn" onclick="filterRecipeType('breakfast',this)">Πρωινά</button>
-        <button class="seg-btn" onclick="filterRecipeType('lunch',this)">Μεσ/νά</button>
-        <button class="seg-btn" onclick="filterRecipeType('dinner',this)">Βραδινά</button>
         <button class="seg-btn" onclick="filterRecipeType('snack',this)">Προάριστο</button>
+        <button class="seg-btn" onclick="filterRecipeType('lunch',this)">Μεσ/νά</button>
+        <button class="seg-btn" onclick="filterRecipeType('afternoon',this)">Απογ/νό</button>
+        <button class="seg-btn" onclick="filterRecipeType('dinner',this)">Βραδινά</button>
       </div>`;
 
   mealTypes.forEach(type => {
@@ -939,42 +940,6 @@ function renderOptimize() {
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" style="flex:1" onclick="runOptimize(false)">▶ Ημέρα ${state.currentDay+1}</button>
           <button class="btn btn-green btn-sm" style="flex:1" onclick="runOptimize(true)">▶▶ Όλες οι Ημέρες</button>
-        </div>
-      </div>
-
-      <!-- 🏗 DAY BUILDER (inline, visible) -->
-      <div class="card card-lg fade-in" id="day-builder-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div class="section-title" style="margin:0">🏗️ Day Builder</div>
-          <div style="font-size:0.75rem;color:var(--text3)">Φτιάξε ημέρα από το μηδέν</div>
-        </div>
-
-        <!-- Live macros -->
-        <div id="builder-macros-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-          <span class="chip">Κανένα γεύμα ακόμα</span>
-        </div>
-
-        <!-- Meal type selector -->
-        <div class="segment" style="margin-bottom:10px">
-          <button class="seg-btn active" onclick="builderFilterType('all',this)">Όλα</button>
-          <button class="seg-btn" onclick="builderFilterType('breakfast',this)">Πρωινά</button>
-          <button class="seg-btn" onclick="builderFilterType('lunch',this)">Μεσ/νά</button>
-          <button class="seg-btn" onclick="builderFilterType('dinner',this)">Βραδινά</button>
-          <button class="seg-btn" onclick="builderFilterType('snack',this)">Προάριστο</button>
-        </div>
-
-        <!-- Recipe list inline -->
-        <div id="builder-recipe-list" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto">
-          ${renderBuilderRecipeList('all')}
-        </div>
-
-        <!-- Selected meals -->
-        <div id="builder-selected" style="margin-top:12px"></div>
-
-        <!-- Actions -->
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-blue" style="flex:1" onclick="applyBuilderToDay()">✓ Εφάρμοσε στην Ημέρα ${state.currentDay+1}</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearBuilder()">🗑</button>
         </div>
       </div>
 
@@ -1149,7 +1114,7 @@ function renderBuilderPage(typeFilter) {
 
       <!-- Φίλτρα -->
       <div class="segment" style="margin-bottom:14px">
-        ${['all','breakfast','snack','lunch','dinner'].map(t => `
+        ${['all','breakfast','snack','lunch','afternoon','dinner'].map(t => `
           <button class="seg-btn ${typeFilter===t?'active':''}" onclick="renderBuilderPage('${t}')">${mealLabels[t]}</button>
         `).join('')}
       </div>
@@ -1478,6 +1443,26 @@ function openRecipeDetail(rid) {
   const m = calcRecipeMacros(recipe);
   const allFoods = [...FOODS_DB, ...state.customFoods];
   const isFav = state.favorites.includes(rid);
+
+  const ingredientsHtml = recipe.ingredients.map(ing => {
+    const food = allFoods.find(f => f.id === ing.foodId);
+    if (!food) return '';
+    return `<div class="ingredient-row"><span class="ingredient-name">${food.name}</span><span class="ingredient-qty">${ing.qty}${food.unit}</span></div>`;
+  }).join('');
+
+  // Οδηγίες: διαχωρισμός μαγειρέματος από σερβίρισμα αν υπάρχει "Σερβίρισμα:" ή "Σέρβιρε:"
+  let cookingHtml = '', servingHtml = '';
+  const instructions = recipe.instructions || '';
+  const servingMatch = instructions.match(/^([\s\S]*?)(Σερβίρισμα:|Σέρβιρε:|Σέρβιρισμα:|Σερβίρετε:)([\s\S]*)$/i);
+  if (servingMatch) {
+    cookingHtml = `<div class="recipe-instructions" style="margin:0 0 10px">${servingMatch[1].trim()}</div>`;
+    servingHtml = `<div class="section-title" style="margin-top:10px">🍽️ Σερβίρισμα</div>
+      <div class="recipe-instructions" style="margin:0 0 16px">${servingMatch[2]}${servingMatch[3].trim()}</div>`;
+  } else {
+    cookingHtml = `<div class="recipe-instructions" style="margin:0 0 16px">${instructions}</div>`;
+    servingHtml = '';
+  }
+
   openModal(`
     <div class="modal-handle"></div>
     <div style="text-align:center;font-size:3rem;margin-bottom:8px">${recipe.emoji}</div>
@@ -1488,14 +1473,11 @@ function openRecipeDetail(rid) {
       <span class="chip">Υ: ${m.c}g</span>
       <span class="chip">Λ: ${m.f}g</span>
     </div>
-    <div class="section-title">Υλικά</div>
-    ${recipe.ingredients.map(ing => {
-      const food = allFoods.find(f => f.id === ing.foodId);
-      if (!food) return '';
-      return `<div class="ingredient-row"><span class="ingredient-name">${food.name}</span><span class="ingredient-qty">${ing.qty}${food.unit}</span></div>`;
-    }).join('')}
-    <div class="section-title" style="margin-top:14px">Οδηγίες</div>
-    <div class="recipe-instructions" style="margin:0 0 16px">${recipe.instructions}</div>
+    <div class="section-title">🧂 Υλικά</div>
+    ${ingredientsHtml}
+    <div class="section-title" style="margin-top:14px">👨‍🍳 Μαγείρεμα</div>
+    ${cookingHtml}
+    ${servingHtml}
     <div style="display:flex;gap:8px">
       <button class="btn btn-ghost btn-sm" onclick="toggleFavorite('${rid}');closeModal()">${isFav?'☆ Αφαίρεση':'⭐ Αγαπημένο'}</button>
       <button class="btn btn-green" style="flex:1" onclick="addRecipeToDay('${rid}');closeModal()">➕ Προσθήκη στην Ημέρα</button>
