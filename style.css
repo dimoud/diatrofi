@@ -615,6 +615,20 @@ select { cursor: pointer; }
 
 /* ── WEEK GRID ── */
 .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+
+/* ── WEEK OVERVIEW (Εβδομαδιαίο tab) ── */
+.week-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.week-col-card { background: var(--card); box-shadow: var(--shadow); }
+#page-week .container { max-width: 1200px; }
+@media (max-width: 700px) {
+  .week-overview-grid { grid-template-columns: repeat(2, 1fr); }
+  #page-week .container { max-width: 100%; }
+}
 .week-day-btn {
   background: var(--card);
   border: 1px solid var(--border);

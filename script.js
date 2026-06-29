@@ -751,43 +751,50 @@ function renderToday() {
 
 // ── PAGE: WEEK ──
 function renderWeek() {
-  const html = state.week.map((day, di) => {
+  const cols = state.week.map((day, di) => {
     const m = calcDayMacros(di);
     const pct = Math.round((m.kcal / state.goals.kcal) * 100);
-    // Ελέγχω αν η ημέρα είναι "ολοκληρωμένη" (όλα τα γεύματα done)
     const allDone = day.meals.length > 0 && day.meals.every(me => me.done);
-    // Ελέγχω αν έχει extra kcal καταγεγραμμένες
     const extraKcal = day.extraKcal || 0;
     const hasExtra = extraKcal > 0;
-    // Ετικέτα με ημερομηνία
-    const dateLabel = state.planStartDate ? `<span style="font-size:0.7rem;color:var(--text3);margin-left:6px">${formatPlanDay(di)}</span>` : '';
-    // Χρώμα κουμπιού
-    const cardBorder = allDone ? 'border:2px solid var(--green);' : hasExtra ? 'border:2px solid var(--red,#ef4444);' : '';
-    const statusBadge = allDone
-      ? `<span style="background:var(--green);color:#fff;border-radius:20px;padding:2px 8px;font-size:0.68rem;font-weight:700">✓ Ολοκλ.</span>`
+    const barColor = pct > 105 ? '#ef4444' : pct > 95 ? '#22c55e' : '#f59e0b';
+    const borderColor = allDone ? 'var(--green)' : hasExtra ? '#ef4444' : 'var(--border)';
+    const dateStr = state.planStartDate ? `<div style="font-size:0.65rem;color:var(--text3);margin-top:1px">${formatPlanDay(di)}</div>` : '';
+    const badge = allDone
+      ? `<span style="display:inline-block;background:var(--green);color:#fff;border-radius:20px;padding:1px 6px;font-size:0.62rem;font-weight:700;margin-top:4px">✓</span>`
       : hasExtra
-      ? `<span style="background:#ef4444;color:#fff;border-radius:20px;padding:2px 8px;font-size:0.68rem;font-weight:700">+${extraKcal} kcal</span>`
+      ? `<span style="display:inline-block;background:#ef4444;color:#fff;border-radius:20px;padding:1px 5px;font-size:0.62rem;font-weight:700;margin-top:4px">+${extraKcal}</span>`
       : '';
 
-    return `
-      <div class="card card-sm fade-in" style="cursor:pointer;${cardBorder}" onclick="goToDay(${di})">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-weight:800;font-size:0.9rem">${day.label}${dateLabel}</div>
-          <div style="display:flex;align-items:center;gap:6px">
-            ${statusBadge}
-            <div style="font-size:0.8rem;font-weight:700;color:var(--green-d)">${m.kcal}${hasExtra?`+${extraKcal}`:''} kcal</div>
-          </div>
-        </div>
-        ${macroBar(m.kcal, state.goals.kcal, '#22c55e')}
-        <div style="display:flex;gap:10px;margin-top:8px;font-size:0.72rem;color:var(--text2)">
-          <span>🥩 ${m.p}g</span><span>🍚 ${m.c}g</span><span>🫒 ${m.f}g</span>
-          <span style="margin-left:auto;color:var(--text3)">${pct}% στόχου</span>
-        </div>
-      </div>`;
+    const mealLines = day.meals.map(me => {
+      let name = '';
+      if (me.standardId) {
+        const sm = STANDARD_MEALS.find(s => s.id === me.standardId);
+        name = sm ? sm.emoji + ' ' + sm.name : '';
+      } else {
+        const allR = [...RECIPES_DB, ...state.customRecipes];
+        const r = allR.find(x => x.id === me.recipeId);
+        name = r ? r.emoji + ' ' + r.name : '';
+      }
+      if (!name) return '';
+      return `<div style="font-size:0.68rem;color:var(--text2);padding:2px 0;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>`;
+    }).join('');
+
+    return `<div class="week-col-card" style="border:2px solid ${borderColor};border-radius:var(--radius);padding:10px;cursor:pointer;min-width:0" onclick="goToDay(${di})">
+      <div style="font-weight:800;font-size:0.82rem;color:var(--text1)">${day.label.replace('Ημέρα ','Ημ.')}</div>
+      ${dateStr}
+      ${badge}
+      <div style="height:4px;background:var(--border);border-radius:2px;margin:6px 0 4px">
+        <div style="height:4px;width:${Math.min(pct,100)}%;background:${barColor};border-radius:2px"></div>
+      </div>
+      <div style="font-size:0.75rem;font-weight:700;color:${barColor};margin-bottom:4px">${m.kcal} kcal</div>
+      <div style="font-size:0.65rem;color:var(--text3);margin-bottom:6px">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div>
+      <div style="display:flex;flex-direction:column;gap:0">${mealLines || '<div style="font-size:0.65rem;color:var(--text3)">Κανένα γεύμα</div>'}</div>
+    </div>`;
   }).join('');
 
   document.getElementById('page-week').innerHTML = `
-    <div class="container">
+    <div class="container" style="padding-bottom:24px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <h2>📅 Εβδομαδιαίο</h2>
         <div style="display:flex;gap:8px">
@@ -795,7 +802,7 @@ function renderWeek() {
           <button class="btn btn-ghost btn-sm" onclick="copyDay()">📋 Αντιγραφή</button>
         </div>
       </div>
-      ${html}
+      <div class="week-overview-grid">${cols}</div>
     </div>`;
 }
 
@@ -2011,6 +2018,15 @@ function exportPDF() {
       ${mealLines}
     </div>`;
   }).join('');
+
+  const summaryPage = `
+    <div style="padding:12mm 10mm;font-family:'Helvetica Neue',Arial,sans-serif">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #22c55e">
+        <div style="font-size:18px;font-weight:800;color:#111">📅 Εβδομαδιαία Επισκόπηση</div>
+        <div style="font-size:10px;color:#6b7280">Στόχος: ${g.kcal} kcal/ημέρα · ${p.name||'Vivon'}</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-start">${weekCols}</div>
+    </div>`;
 
   // ── ΣΕΛΙΔΑ 2+: Portrait — ανά ημέρα, λεπτομέρειες μόνο για μεσημεριανό ──
   const dayPages = state.week.map((day, di) => {
