@@ -751,6 +751,16 @@ function renderToday() {
 
 // ── PAGE: WEEK ──
 function renderWeek() {
+  const allR = [...RECIPES_DB, ...state.customRecipes];
+  const mealOrder = ['breakfast','snack','lunch','afternoon','dinner'];
+  const mealMeta = {
+    breakfast:  { label:'Πρωινό',        color:'#f59e0b', bg:'#fffbeb', icon:'☀️' },
+    snack:      { label:'Προάριστο',      color:'#10b981', bg:'#f0fdf4', icon:'🥐' },
+    lunch:      { label:'Μεσημεριανό',    color:'#3b82f6', bg:'#eff6ff', icon:'🥗' },
+    afternoon:  { label:'Απογευματινό',   color:'#06b6d4', bg:'#ecfeff', icon:'☕' },
+    dinner:     { label:'Βραδινό',        color:'#8b5cf6', bg:'#f5f3ff', icon:'🌙' },
+  };
+
   const cols = state.week.map((day, di) => {
     const m = calcDayMacros(di);
     const pct = Math.round((m.kcal / state.goals.kcal) * 100);
@@ -760,41 +770,78 @@ function renderWeek() {
     const barColor = pct > 105 ? '#ef4444' : pct > 95 ? '#22c55e' : '#f59e0b';
     const borderColor = allDone ? 'var(--green)' : hasExtra ? '#ef4444' : 'var(--border)';
     const dateStr = state.planStartDate ? `<div style="font-size:0.65rem;color:var(--text3);margin-top:1px">${formatPlanDay(di)}</div>` : '';
-    const badge = allDone
-      ? `<span style="display:inline-block;background:var(--green);color:#fff;border-radius:20px;padding:1px 6px;font-size:0.62rem;font-weight:700;margin-top:4px">✓</span>`
-      : hasExtra
-      ? `<span style="display:inline-block;background:#ef4444;color:#fff;border-radius:20px;padding:1px 5px;font-size:0.62rem;font-weight:700;margin-top:4px">+${extraKcal}</span>`
-      : '';
 
-    const mealLines = day.meals.map(me => {
-      let name = '';
-      if (me.standardId) {
-        const sm = STANDARD_MEALS.find(s => s.id === me.standardId);
-        name = sm ? sm.emoji + ' ' + sm.name : '';
-      } else {
-        const allR = [...RECIPES_DB, ...state.customRecipes];
+    // Ομαδοποίηση ανά τύπο γεύματος
+    const byType = {};
+    day.meals.forEach(me => {
+      if (!byType[me.type]) byType[me.type] = [];
+      byType[me.type].push(me);
+    });
+
+    const mealSections = mealOrder.map(type => {
+      const meals = byType[type];
+      if (!meals || meals.length === 0) return '';
+      const meta = mealMeta[type] || { label: type, color:'#6b7280', bg:'#f9fafb', icon:'🍽️' };
+
+      const lines = meals.map(me => {
+        let name = '', kcal = 0;
+        if (me.standardId) {
+          const sm = STANDARD_MEALS.find(s => s.id === me.standardId);
+          if (!sm) return '';
+          name = sm.emoji + ' ' + sm.name;
+          kcal = Math.round(sm.kcal_est * (me.scaleFactor||1));
+        } else {
+          const r = allR.find(x => x.id === me.recipeId);
+          if (!r) return '';
+          const mac = calcRecipeMacros(r, me.scaleFactor||1);
+          name = r.emoji + ' ' + r.name;
+          kcal = mac.kcal;
+        }
+        return `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;padding:2px 0">
+          <span style="font-size:0.7rem;color:var(--text1);line-height:1.35;word-break:break-word;flex:1;font-weight:600">${name}</span>
+          <span style="font-size:0.68rem;color:${meta.color};font-weight:700;white-space:nowrap">${kcal}</span>
+        </div>`;
+      }).filter(Boolean).join('');
+
+      if (!lines) return '';
+
+      // Σύνολο kcal του τύπου
+      const typeKcal = meals.reduce((acc, me) => {
+        if (me.standardId) {
+          const sm = STANDARD_MEALS.find(s => s.id === me.standardId);
+          return acc + (sm ? Math.round(sm.kcal_est * (me.scaleFactor||1)) : 0);
+        }
         const r = allR.find(x => x.id === me.recipeId);
-        name = r ? r.emoji + ' ' + r.name : '';
-      }
-      if (!name) return '';
-      return `<div style="font-size:0.68rem;color:var(--text2);padding:2px 0;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>`;
+        return acc + (r ? calcRecipeMacros(r, me.scaleFactor||1).kcal : 0);
+      }, 0);
+
+      return `<div style="margin-bottom:6px;background:${meta.bg};border-radius:6px;padding:5px 7px;border-left:3px solid ${meta.color}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+          <span style="font-size:0.62rem;font-weight:800;color:${meta.color};text-transform:uppercase;letter-spacing:0.03em">${meta.icon} ${meta.label}</span>
+          <span style="font-size:0.62rem;font-weight:700;color:${meta.color}">${typeKcal} kcal</span>
+        </div>
+        ${lines}
+      </div>`;
     }).join('');
 
     return `<div class="week-col-card" style="border:2px solid ${borderColor};border-radius:var(--radius);padding:10px;cursor:pointer;min-width:0" onclick="goToDay(${di})">
-      <div style="font-weight:800;font-size:0.82rem;color:var(--text1)">${day.label.replace('Ημέρα ','Ημ.')}</div>
+      <div style="font-weight:800;font-size:0.85rem;color:var(--text1)">${day.label.replace('Ημέρα ','Ημ.')}</div>
       ${dateStr}
-      ${badge}
-      <div style="height:4px;background:var(--border);border-radius:2px;margin:6px 0 4px">
+      <div style="height:4px;background:var(--border);border-radius:2px;margin:6px 0 3px">
         <div style="height:4px;width:${Math.min(pct,100)}%;background:${barColor};border-radius:2px"></div>
       </div>
-      <div style="font-size:0.75rem;font-weight:700;color:${barColor};margin-bottom:4px">${m.kcal} kcal</div>
-      <div style="font-size:0.65rem;color:var(--text3);margin-bottom:6px">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div>
-      <div style="display:flex;flex-direction:column;gap:0">${mealLines || '<div style="font-size:0.65rem;color:var(--text3)">Κανένα γεύμα</div>'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <span style="font-size:0.8rem;font-weight:800;color:${barColor}">${m.kcal} kcal <span style="font-size:0.62rem;font-weight:600">(${pct}%)</span></span>
+        <span style="font-size:0.6rem;color:var(--text3)">Π:${m.p}g Υ:${m.c}g Λ:${m.f}g</span>
+      </div>
+      ${mealSections || '<div style="font-size:0.65rem;color:var(--text3)">Κανένα γεύμα</div>'}
+      ${hasExtra ? `<div style="margin-top:4px;font-size:0.62rem;color:#ef4444;font-weight:700">⚠️ +${extraKcal} kcal εκτός</div>` : ''}
+      ${allDone ? `<div style="margin-top:4px;font-size:0.62rem;color:var(--green);font-weight:700">✓ Ολοκληρώθηκε</div>` : ''}
     </div>`;
   }).join('');
 
   document.getElementById('page-week').innerHTML = `
-    <div class="container" style="padding-bottom:24px">
+    <div style="padding:16px 16px 24px;max-width:1400px;margin:0 auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <h2>📅 Εβδομαδιαίο</h2>
         <div style="display:flex;gap:8px">
@@ -1457,18 +1504,19 @@ function openRecipeDetail(rid) {
     return `<div class="ingredient-row"><span class="ingredient-name">${food.name}</span><span class="ingredient-qty">${ing.qty}${food.unit}</span></div>`;
   }).join('');
 
-  // Οδηγίες: διαχωρισμός μαγειρέματος από σερβίρισμα αν υπάρχει "Σερβίρισμα:" ή "Σέρβιρε:"
-  let cookingHtml = '', servingHtml = '';
-  const instructions = recipe.instructions || '';
-  const servingMatch = instructions.match(/^([\s\S]*?)(Σερβίρισμα:|Σέρβιρε:|Σέρβιρισμα:|Σερβίρετε:)([\s\S]*)$/i);
-  if (servingMatch) {
-    cookingHtml = `<div class="recipe-instructions" style="margin:0 0 10px">${servingMatch[1].trim()}</div>`;
-    servingHtml = `<div class="section-title" style="margin-top:10px">🍽️ Σερβίρισμα</div>
-      <div class="recipe-instructions" style="margin:0 0 16px">${servingMatch[2]}${servingMatch[3].trim()}</div>`;
-  } else {
-    cookingHtml = `<div class="recipe-instructions" style="margin:0 0 16px">${instructions}</div>`;
-    servingHtml = '';
+  // Μετατροπή "\n" σε αριθμημένα βήματα
+  function stepsHtml(text) {
+    if (!text) return '';
+    return text.split('\n').map(l => l.trim()).filter(Boolean)
+      .map(l => `<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:0.85rem;line-height:1.5">${l}</div>`)
+      .join('');
   }
+
+  const cookingHtml = stepsHtml(recipe.instructions);
+  const servingHtml = recipe.serving
+    ? `<div class="section-title" style="margin-top:14px">🍽️ Σερβίρισμα</div>
+       <div style="background:var(--green-bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px;font-size:0.85rem;color:var(--text2);line-height:1.5">${recipe.serving}</div>`
+    : '';
 
   openModal(`
     <div class="modal-handle"></div>
@@ -1482,10 +1530,10 @@ function openRecipeDetail(rid) {
     </div>
     <div class="section-title">🧂 Υλικά</div>
     ${ingredientsHtml}
-    <div class="section-title" style="margin-top:14px">👨‍🍳 Μαγείρεμα</div>
-    ${cookingHtml}
+    <div class="section-title" style="margin-top:14px">👨‍🍳 Οδηγίες Μαγειρέματος</div>
+    <div style="margin-bottom:${recipe.serving ? '4px' : '16px'}">${cookingHtml}</div>
     ${servingHtml}
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-ghost btn-sm" onclick="toggleFavorite('${rid}');closeModal()">${isFav?'☆ Αφαίρεση':'⭐ Αγαπημένο'}</button>
       <button class="btn btn-green" style="flex:1" onclick="addRecipeToDay('${rid}');closeModal()">➕ Προσθήκη στην Ημέρα</button>
     </div>`);
@@ -1512,8 +1560,9 @@ function openFoodDetail(fid) {
 function openSwapMeal(mi, activeTab) {
   const allRecipes = [...RECIPES_DB, ...state.customRecipes];
   const currentType = state.week[state.currentDay].meals[mi].type;
-  const recipes = allRecipes.filter(r => r.meal === currentType);
-  const standards = STANDARD_MEALS.filter(s => s.meal === currentType);
+  const snackTypes = currentType === 'afternoon' ? ['afternoon', 'snack'] : [currentType];
+  const recipes = allRecipes.filter(r => snackTypes.includes(r.meal));
+  const standards = STANDARD_MEALS.filter(s => snackTypes.includes(s.meal));
   const tab = activeTab || 'standard';
 
   const mealTypeLabel = { breakfast:'Πρωινά', lunch:'Μεσημεριανά', dinner:'Βραδινά', snack:'Προάριστο', afternoon:'Απογευματινό' }[currentType] || '';
@@ -1877,6 +1926,7 @@ function doCopyDay(targetIdx) {
 // ── PDF ΕΚΤΥΠΩΣΗ ΗΜΕΡΑΣ ──
 function exportDayPDF(dayIdx) {
   const allRecipes = [...RECIPES_DB, ...state.customRecipes];
+  const allFoodsLocal = [...FOODS_DB, ...state.customFoods];
   const p = state.profile;
   const g = state.goals;
   const day = state.week[dayIdx];
@@ -1894,7 +1944,8 @@ function exportDayPDF(dayIdx) {
       name = sm.emoji + ' ' + sm.name;
       kcal = Math.round(sm.kcal_est * (m.scaleFactor||1));
       macStr = '— / — / —';
-      detailHtml = `<tr><td colspan="5" style="padding:2px 12px 6px;font-size:9px;color:#6b7280">${sm.items.join(' · ')}${sm.note?' · '+sm.note:''}</td></tr>`;
+      const itemsList = sm.items.join(' · ') + (sm.note ? ' · ' + sm.note : '');
+      detailHtml = `<tr><td colspan="5" style="padding:1px 12px 7px;font-size:9px;color:#6b7280;line-height:1.5;white-space:normal;word-break:break-word">${itemsList}</td></tr>`;
     } else {
       const r = allRecipes.find(x => x.id === m.recipeId);
       if (!r) return '';
@@ -1902,7 +1953,6 @@ function exportDayPDF(dayIdx) {
       name = r.emoji + ' ' + r.name;
       kcal = mac.kcal;
       macStr = `Π:${mac.p}g / Υ:${mac.c}g / Λ:${mac.f}g`;
-      const allFoodsLocal = [...FOODS_DB, ...state.customFoods];
       const ingList = r.ingredients.map(ing => {
         const food = allFoodsLocal.find(f => f.id === ing.foodId);
         if (!food) return '';
@@ -1912,56 +1962,59 @@ function exportDayPDF(dayIdx) {
         if (ing.foodId === 'f9' && food.unit === 'g') qty = 30;
         return food.name + ' ' + qty + food.unit;
       }).filter(Boolean).join(' · ');
-      detailHtml = `<tr><td colspan="5" style="padding:2px 12px 5px;font-size:9px;color:#6b7280">${ingList}</td></tr>
-      <tr><td colspan="5" style="padding:2px 12px 8px;font-size:8.5px;color:#9ca3af;font-style:italic">${r.instructions}</td></tr>`;
+      detailHtml = `<tr><td colspan="5" style="padding:1px 12px 4px;font-size:9px;color:#6b7280;line-height:1.5;white-space:normal;word-break:break-word">${ingList}</td></tr>`;
+      if (r.instructions) {
+        detailHtml += `<tr><td colspan="5" style="padding:1px 12px 7px;font-size:8.5px;color:#9ca3af;font-style:italic;line-height:1.5;white-space:normal;word-break:break-word">${r.instructions}</td></tr>`;
+      }
     }
-    const mealTypeLabel = { breakfast:'Πρωινό', snack:'Προάριστο', lunch:'Μεσ/νό', afternoon:'Απογ/νό', dinner:'Βραδινό' }[m.type] || m.type;
-    const typeColor = { breakfast:'#f59e0b', snack:'#10b981', lunch:'#3b82f6', dinner:'#8b5cf6' }[m.type] || '#6b7280';
-    return `<tr style="border-bottom:1px solid #f3f4f6">
-      <td style="padding:5px 8px;font-size:9px;color:${typeColor};font-weight:700;white-space:nowrap">${mealTypeLabel}</td>
-      <td style="padding:5px 8px;font-size:9.5px;font-weight:600;color:#111">${name}</td>
-      <td style="padding:5px 8px;font-size:9px;color:#374151;text-align:right;white-space:nowrap">${kcal}</td>
-      <td style="padding:5px 8px;font-size:8.5px;color:#6b7280;white-space:nowrap">${macStr}</td>
-      <td style="padding:5px 8px;font-size:8.5px;color:#9ca3af">${m.time||''}</td>
+    const mealTypeLabel = { breakfast:'Πρωινό', snack:'Προάριστο', lunch:'Μεσημεριανό', afternoon:'Απογευματινό', dinner:'Βραδινό' }[m.type] || m.type;
+    const typeColor = { breakfast:'#f59e0b', snack:'#10b981', lunch:'#3b82f6', afternoon:'#06b6d4', dinner:'#8b5cf6' }[m.type] || '#6b7280';
+    const rowBg = { breakfast:'#fffbeb', snack:'#f0fdf4', lunch:'#eff6ff', afternoon:'#ecfeff', dinner:'#f5f3ff' }[m.type] || '#fff';
+    return `<tr style="border-bottom:1px solid #e5e7eb;background:${rowBg}">
+      <td style="padding:6px 8px;font-size:9.5px;color:${typeColor};font-weight:700;white-space:nowrap;vertical-align:top">${mealTypeLabel}</td>
+      <td style="padding:6px 8px;font-size:10px;font-weight:700;color:#111;vertical-align:top">${name}</td>
+      <td style="padding:6px 8px;font-size:10px;font-weight:700;color:#374151;text-align:right;white-space:nowrap;vertical-align:top">${kcal}</td>
+      <td style="padding:6px 8px;font-size:9px;color:#6b7280;white-space:nowrap;vertical-align:top">${macStr}</td>
+      <td style="padding:6px 8px;font-size:9px;color:#9ca3af;vertical-align:top">${m.time||''}</td>
     </tr>${detailHtml}`;
   }).join('');
 
   const extraRow = extraKcal > 0
-    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:5px 8px;font-size:9px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
+    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:6px 8px;font-size:9px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
     : '';
 
-  const html = `<style>@page { size: A4 portrait; margin: 12mm 14mm; }</style>
-    <div style="font-family:'Helvetica Neue',Arial,sans-serif;padding:4mm 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #22c55e">
+  const html = `<style>@page { size: A4 portrait; margin: 0; }</style>
+    <div style="font-family:'Helvetica Neue',Arial,sans-serif;padding:10mm 12mm;min-height:277mm;box-sizing:border-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:3px solid #22c55e">
         <div>
-          <div style="font-size:18px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
+          <div style="font-size:17px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
           <div style="font-size:10px;color:#6b7280;margin-top:2px">Στόχος: ${g.kcal} kcal · Πλάνο: ${tot.kcal} kcal (${pct}%) · ${p.name||'Vivon'}</div>
         </div>
-        <div style="text-align:right;font-size:11px;font-weight:700">
-          <div style="color:#3b82f6">Πρωτ: ${tot.p}g</div>
-          <div style="color:#8b5cf6">Υδατ: ${tot.c}g</div>
-          <div style="color:#f59e0b">Λίπος: ${tot.f}g</div>
+        <div style="text-align:right">
+          <div style="font-size:11px;font-weight:700;color:#3b82f6">Πρωτεΐνη: ${tot.p}g</div>
+          <div style="font-size:11px;font-weight:700;color:#8b5cf6">Υδατάνθρακες: ${tot.c}g</div>
+          <div style="font-size:11px;font-weight:700;color:#f59e0b">Λίπος: ${tot.f}g</div>
         </div>
       </div>
-      <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:14px">
+      <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:12px">
         <div style="height:6px;width:${pct}%;background:${barColor};border-radius:3px"></div>
       </div>
-      <table style="width:100%;border-collapse:collapse">
+      <table style="width:100%;border-collapse:collapse;font-size:9.5px">
         <thead>
-          <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb">
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:70px">ΓΕΥΜΑ</th>
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700">ΣΥΝΤΑΓΗ</th>
-            <th style="padding:7px 8px;text-align:right;font-size:9px;color:#6b7280;font-weight:700;width:50px">KCAL</th>
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:130px">MACROS</th>
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:40px">ΩΡΑ</th>
+          <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:85px">ΓΕΥΜΑ</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700">ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ</th>
+            <th style="padding:7px 8px;text-align:right;font-size:9px;color:#475569;font-weight:700;width:55px">KCAL</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:130px">MACROS</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:45px">ΩΡΑ</th>
           </tr>
         </thead>
         <tbody>${mealRows}${extraRow}</tbody>
         <tfoot>
           <tr style="background:#f0fdf4;border-top:2px solid #22c55e">
-            <td colspan="2" style="padding:8px;font-weight:800;font-size:11px;color:#111">ΣΥΝΟΛΟ</td>
+            <td colspan="2" style="padding:8px;font-weight:800;font-size:11px;color:#111">ΣΥΝΟΛΟ ΗΜΕΡΑΣ</td>
             <td style="padding:8px;font-weight:800;font-size:12px;color:#22c55e;text-align:right">${tot.kcal + extraKcal}</td>
-            <td style="padding:8px;font-size:9px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
+            <td style="padding:8px;font-size:9.5px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
             <td></td>
           </tr>
         </tfoot>
@@ -1988,6 +2041,8 @@ function exportPDF() {
     const pct = Math.min(100, Math.round((tot.kcal / g.kcal) * 100));
     const barColor = pct > 105 ? '#ef4444' : pct > 95 ? '#22c55e' : '#f59e0b';
 
+    const dateHeaderStr = state.planStartDate ? `<div style="font-size:8px;color:#6b7280;font-weight:600;margin-top:1px">${formatPlanDay(di)}</div>` : '';
+
     const mealLines = day.meals.map(m => {
       let name = '', kcal = 0;
       if (m.standardId) {
@@ -2002,19 +2057,19 @@ function exportPDF() {
         name = r.emoji + ' ' + r.name;
         kcal = mac.kcal;
       }
-      return `<div style="display:flex;justify-content:space-between;font-size:9px;padding:2px 0;border-bottom:1px solid #f3f4f6">
-        <span style="color:#374151;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${name}</span>
-        <span style="color:#6b7280;white-space:nowrap;margin-left:4px">${kcal}</span>
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:8.5px;padding:3px 0;border-bottom:1px solid #f3f4f6;gap:4px;line-height:1.3">
+        <span style="color:#374151;white-space:normal;word-break:break-word;flex:1">${name}</span>
+        <span style="color:#6b7280;white-space:nowrap;font-weight:700;padding-left:2px">${kcal}</span>
       </div>`;
     }).join('');
 
-    return `<div style="flex:1;min-width:0;border:1px solid #e5e7eb;border-radius:6px;padding:7px;background:#fff">
-      <div style="font-weight:800;font-size:10px;color:#111;margin-bottom:4px;border-bottom:2px solid ${barColor};padding-bottom:3px">${day.label.replace('Ημέρα ','Ημ.')}</div>
-      <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:4px">
+    return `<div style="flex:1;min-width:0;border:1px solid #e5e7eb;border-radius:6px;padding:8px;background:#fff">
+      <div style="font-weight:800;font-size:10px;color:#111;border-bottom:2px solid ${barColor};padding-bottom:4px;margin-bottom:5px">${day.label.replace('Ημέρα ','Ημ.')}${dateHeaderStr}</div>
+      <div style="height:4px;background:#e5e7eb;border-radius:2px;margin-bottom:5px">
         <div style="height:4px;width:${pct}%;background:${barColor};border-radius:2px"></div>
       </div>
-      <div style="font-size:9px;color:${barColor};font-weight:700;margin-bottom:4px">${tot.kcal} kcal (${pct}%)</div>
-      <div style="font-size:8.5px;color:#6b7280;margin-bottom:4px">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</div>
+      <div style="font-size:9px;color:${barColor};font-weight:700;margin-bottom:3px">${tot.kcal} kcal (${pct}%)</div>
+      <div style="font-size:8.5px;color:#6b7280;margin-bottom:6px">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</div>
       ${mealLines}
     </div>`;
   }).join('');
@@ -2028,7 +2083,8 @@ function exportPDF() {
       <div style="display:flex;gap:6px;align-items:flex-start">${weekCols}</div>
     </div>`;
 
-  // ── ΣΕΛΙΔΑ 2+: Portrait — ανά ημέρα, λεπτομέρειες μόνο για μεσημεριανό ──
+  // ── ΣΕΛΙΔΑ 2+: Portrait — ανά ημέρα, λεπτομέρειες για όλα τα γεύματα ──
+  const allFoodsForPrint = [...FOODS_DB, ...state.customFoods];
   const dayPages = state.week.map((day, di) => {
     const tot = calcDayMacros(di, false);
     const pct = Math.min(100, Math.round((tot.kcal / g.kcal) * 100));
@@ -2036,7 +2092,6 @@ function exportPDF() {
 
     const mealRows = day.meals.map(m => {
       let name = '', kcal = 0, macStr = '', detailHtml = '';
-      const isLunch = m.type === 'lunch';
 
       if (m.standardId) {
         const sm = STANDARD_MEALS.find(s => s.id === m.standardId);
@@ -2044,9 +2099,8 @@ function exportPDF() {
         name = sm.emoji + ' ' + sm.name;
         kcal = Math.round(sm.kcal_est * (m.scaleFactor||1));
         macStr = '— / — / —';
-        if (isLunch) {
-          detailHtml = `<tr><td colspan="5" style="padding:2px 12px 6px;font-size:9px;color:#6b7280">${sm.items.join(' · ')}${sm.note ? ' · ' + sm.note : ''}</td></tr>`;
-        }
+        const itemsList = sm.items.join(' · ') + (sm.note ? ' · ' + sm.note : '');
+        detailHtml = `<tr><td colspan="5" style="padding:1px 12px 7px;font-size:9px;color:#6b7280;line-height:1.5;white-space:normal;word-break:break-word">${itemsList}</td></tr>`;
       } else {
         const r = allRecipes.find(x => x.id === m.recipeId);
         if (!r) return '';
@@ -2054,65 +2108,64 @@ function exportPDF() {
         name = r.emoji + ' ' + r.name;
         kcal = mac.kcal;
         macStr = `Π:${mac.p}g / Υ:${mac.c}g / Λ:${mac.f}g`;
-        if (isLunch) {
-          const allFoods = [...FOODS_DB, ...state.customFoods];
-          const allFoodsLocal = [...FOODS_DB, ...state.customFoods];
-          const ingList = r.ingredients.map(ing => {
-            const food = allFoodsLocal.find(f => f.id === ing.foodId);
-            if (!food) return '';
-            let qty = ing.qty * (m.scaleFactor||1);
-            if (food.unit === 'g') qty = Math.round(qty / 10) * 10;
-            else qty = Math.round(qty);
-            if (ing.foodId === 'f9' && food.unit === 'g') qty = 30;
-            return food.name + ' ' + qty + food.unit;
-          }).filter(Boolean).join(' · ');
-          detailHtml = `<tr><td colspan="5" style="padding:2px 12px 6px;font-size:9px;color:#6b7280">${ingList}</td></tr>
-          <tr><td colspan="5" style="padding:2px 12px 8px;font-size:8.5px;color:#9ca3af;font-style:italic">${r.instructions}</td></tr>`;
+        const ingList = r.ingredients.map(ing => {
+          const food = allFoodsForPrint.find(f => f.id === ing.foodId);
+          if (!food) return '';
+          let qty = ing.qty * (m.scaleFactor||1);
+          if (food.unit === 'g') qty = Math.round(qty / 10) * 10;
+          else qty = Math.round(qty);
+          if (ing.foodId === 'f9' && food.unit === 'g') qty = 30;
+          return food.name + ' ' + qty + food.unit;
+        }).filter(Boolean).join(' · ');
+        detailHtml = `<tr><td colspan="5" style="padding:1px 12px 4px;font-size:9px;color:#6b7280;line-height:1.5;white-space:normal;word-break:break-word">${ingList}</td></tr>`;
+        if (r.instructions) {
+          detailHtml += `<tr><td colspan="5" style="padding:1px 12px 7px;font-size:8.5px;color:#9ca3af;font-style:italic;line-height:1.5;white-space:normal;word-break:break-word">${r.instructions}</td></tr>`;
         }
       }
 
-      const mealTypeLabel = { breakfast:'Πρωινό', snack:'Προάριστο', lunch:'Μεσ/νό', afternoon:'Απογ/νό', dinner:'Βραδινό' }[m.type] || m.type;
-      const typeColor = { breakfast:'#f59e0b', snack:'#10b981', lunch:'#3b82f6', dinner:'#8b5cf6' }[m.type] || '#6b7280';
+      const mealTypeLabel = { breakfast:'Πρωινό', snack:'Προάριστο', lunch:'Μεσημεριανό', afternoon:'Απογευματινό', dinner:'Βραδινό' }[m.type] || m.type;
+      const typeColor = { breakfast:'#f59e0b', snack:'#10b981', lunch:'#3b82f6', afternoon:'#06b6d4', dinner:'#8b5cf6' }[m.type] || '#6b7280';
+      const rowBg = { breakfast:'#fffbeb', snack:'#f0fdf4', lunch:'#eff6ff', afternoon:'#ecfeff', dinner:'#f5f3ff' }[m.type] || '#fff';
 
-      return `<tr style="border-bottom:1px solid #f3f4f6">
-        <td style="padding:5px 8px;font-size:9px;color:${typeColor};font-weight:700;white-space:nowrap">${mealTypeLabel}</td>
-        <td style="padding:5px 8px;font-size:9.5px;font-weight:600;color:#111">${name}</td>
-        <td style="padding:5px 8px;font-size:9px;color:#374151;text-align:right;white-space:nowrap">${kcal}</td>
-        <td style="padding:5px 8px;font-size:8.5px;color:#6b7280;white-space:nowrap">${macStr}</td>
-        <td style="padding:5px 8px;font-size:8.5px;color:#9ca3af">${m.time||''}</td>
+      return `<tr style="border-bottom:1px solid #e5e7eb;background:${rowBg}">
+        <td style="padding:6px 8px;font-size:9.5px;color:${typeColor};font-weight:700;white-space:nowrap;vertical-align:top">${mealTypeLabel}</td>
+        <td style="padding:6px 8px;font-size:10px;font-weight:700;color:#111;vertical-align:top">${name}</td>
+        <td style="padding:6px 8px;font-size:10px;font-weight:700;color:#374151;text-align:right;white-space:nowrap;vertical-align:top">${kcal}</td>
+        <td style="padding:6px 8px;font-size:9px;color:#6b7280;white-space:nowrap;vertical-align:top">${macStr}</td>
+        <td style="padding:6px 8px;font-size:9px;color:#9ca3af;vertical-align:top">${m.time||''}</td>
       </tr>${detailHtml}`;
     }).join('');
 
     const extraKcal = day.extraKcal || 0;
     const extraRow = extraKcal > 0
-      ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:5px 8px;font-size:9px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
+      ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:6px 8px;font-size:9px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
       : '';
     const dateLabel = state.planStartDate ? ` · ${formatPlanDay(di)}` : '';
 
     return `
-      <div style="page-break-before:always;padding:12mm 14mm;font-family:'Helvetica Neue',Arial,sans-serif">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #22c55e">
+      <div style="page-break-before:always;padding:10mm 12mm;font-family:'Helvetica Neue',Arial,sans-serif;min-height:277mm;box-sizing:border-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:3px solid #22c55e">
           <div>
-            <div style="font-size:16px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
+            <div style="font-size:17px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Στόχος: ${g.kcal} kcal · Πλάνο: ${tot.kcal} kcal (${pct}%)</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:11px;font-weight:700;color:#3b82f6">Π: ${tot.p}g</div>
-            <div style="font-size:11px;font-weight:700;color:#8b5cf6">Υ: ${tot.c}g</div>
-            <div style="font-size:11px;font-weight:700;color:#f59e0b">Λ: ${tot.f}g</div>
+            <div style="font-size:11px;font-weight:700;color:#3b82f6">Πρωτεΐνη: ${tot.p}g</div>
+            <div style="font-size:11px;font-weight:700;color:#8b5cf6">Υδατάνθρακες: ${tot.c}g</div>
+            <div style="font-size:11px;font-weight:700;color:#f59e0b">Λίπος: ${tot.f}g</div>
           </div>
         </div>
-        <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:14px">
+        <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:12px">
           <div style="height:6px;width:${pct}%;background:${barColor};border-radius:3px"></div>
         </div>
         <table style="width:100%;border-collapse:collapse;font-size:9.5px">
           <thead>
-            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb">
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:70px">ΓΕΥΜΑ</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700">ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ</th>
-              <th style="padding:6px 8px;text-align:right;font-size:9px;color:#6b7280;font-weight:700;width:55px">KCAL</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:120px">MACROS</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:#6b7280;font-weight:700;width:45px">ΩΡΑ</th>
+            <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
+              <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:85px">ΓΕΥΜΑ</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700">ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ</th>
+              <th style="padding:7px 8px;text-align:right;font-size:9px;color:#475569;font-weight:700;width:55px">KCAL</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:130px">MACROS</th>
+              <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:45px">ΩΡΑ</th>
             </tr>
           </thead>
           <tbody>
@@ -2121,9 +2174,9 @@ function exportPDF() {
           </tbody>
           <tfoot>
             <tr style="background:#f0fdf4;border-top:2px solid #22c55e">
-              <td colspan="2" style="padding:7px 8px;font-weight:800;font-size:10px;color:#111">ΣΥΝΟΛΟ ΗΜΕΡΑΣ</td>
-              <td style="padding:7px 8px;font-weight:800;font-size:11px;color:#22c55e;text-align:right">${tot.kcal + extraKcal}</td>
-              <td style="padding:7px 8px;font-size:9px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
+              <td colspan="2" style="padding:8px;font-weight:800;font-size:11px;color:#111">ΣΥΝΟΛΟ ΗΜΕΡΑΣ</td>
+              <td style="padding:8px;font-weight:800;font-size:12px;color:#22c55e;text-align:right">${tot.kcal + extraKcal}</td>
+              <td style="padding:8px;font-size:9.5px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
               <td></td>
             </tr>
           </tfoot>
