@@ -1272,22 +1272,22 @@ function renderBuilderPage(typeFilter) {
   const savedTemplates = state.dayTemplates || [];
 
   const mealTypeMeta = {
-    breakfast:  { label: 'Πρωινό',       icon: '🌅', cls: 'breakfast', color: '#f59e0b', time: '08:00' },
-    snack:      { label: 'Δεκατιανό',    icon: '🍎', cls: 'snack',     color: '#22c55e', time: '11:00' },
-    lunch:      { label: 'Μεσημεριανό',  icon: '☀️', cls: 'lunch',     color: '#3b82f6', time: '14:00' },
-    afternoon:  { label: 'Απογευματινό', icon: '🧃', cls: 'afternoon', color: '#06b6d4', time: '17:00' },
-    dinner:     { label: 'Βραδινό',      icon: '🌙', cls: 'dinner',    color: '#8b5cf6', time: '20:00' },
+    breakfast:  { label: 'Πρωινό',        icon: '🌅', cls: 'breakfast', color: '#f59e0b', time: '08:00' },
+    snack:      { label: 'Πρόαριστο',     icon: '🍎', cls: 'snack',     color: '#22c55e', time: '10:30' },
+    lunch:      { label: 'Μεσημεριανό',   icon: '☀️', cls: 'lunch',     color: '#3b82f6', time: '13:30' },
+    afternoon:  { label: 'Απογευματινό',  icon: '🧃', cls: 'afternoon', color: '#06b6d4', time: '16:30' },
+    dinner:     { label: 'Βραδινό',       icon: '🌙', cls: 'dinner',    color: '#8b5cf6', time: '20:00' },
   };
   const filterLabels = [
     { key: 'all',       label: 'Όλα' },
-    { key: 'breakfast', label: 'Πρωινά' },
-    { key: 'lunch',     label: 'Μεσημεριανά' },
-    { key: 'dinner',    label: 'Βραδινά' },
-    { key: 'snack',     label: 'Σνακ' },
+    { key: 'breakfast', label: 'Πρωινό' },
+    { key: 'snack',     label: 'Πρόαριστο' },
+    { key: 'lunch',     label: 'Μεσημεριανό' },
+    { key: 'afternoon', label: 'Απογευματινό' },
+    { key: 'dinner',    label: 'Βραδινό' },
   ];
-  const mealTypes = typeFilter === 'all'
-    ? ['breakfast','snack','lunch','afternoon','dinner']
-    : [typeFilter];
+  const allMealTypes = ['breakfast','snack','lunch','afternoon','dinner'];
+  const mealTypes = typeFilter === 'all' ? allMealTypes : [typeFilter];
 
   // ── LEFT: meal library ──
   const libSearch = (window._builderSearch || '').toLowerCase();
@@ -1345,7 +1345,8 @@ function renderBuilderPage(typeFilter) {
     }
   });
 
-  mealTypes.forEach(t => {
+  // Middle always shows all 5 meal slots regardless of filter
+  allMealTypes.forEach(t => {
     const meta = mealTypeMeta[t];
     const mealsOfType = builderMeals.filter(bm => {
       if (bm.isStandard) { const sm = STANDARD_MEALS.find(s => s.id === bm.id); return sm && sm.meal === t; }
