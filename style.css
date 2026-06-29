@@ -961,8 +961,9 @@ select { cursor: pointer; }
 .dplanner-meal-name  { font-size: 0.82rem; font-weight: 700; line-height: 1.3; }
 .dplanner-meal-meta  { font-size: 0.7rem; color: var(--text3); margin-top: 2px; }
 .dplanner-meal-kcal  {
-  font-size: 0.88rem; font-weight: 800; color: var(--green-d);
-  min-width: 44px; text-align: right; flex-shrink: 0;
+  font-size: 0.8rem; font-weight: 700; color: var(--text2);
+  min-width: 60px; text-align: right; flex-shrink: 0;
+  white-space: nowrap;
 }
 .dplanner-add-btn {
   width: 26px; height: 26px; border-radius: 50%;
@@ -972,6 +973,7 @@ select { cursor: pointer; }
   font-size: 1.1rem; font-weight: 700;
   opacity: 0; transition: opacity var(--transition); flex-shrink: 0;
 }
+.dplanner-add-btn--visible { opacity: 1; }
 .dplanner-meal-card.selected-dp .dplanner-add-btn { opacity: 1; background: var(--red); }
 
 /* ── MIDDLE: day plan ── */

@@ -1306,10 +1306,10 @@ function renderBuilderPage(typeFilter) {
         <div class="dplanner-meal-emoji">${s.emoji}</div>
         <div class="dplanner-meal-info">
           <div class="dplanner-meal-name">${s.name}</div>
-          <div class="dplanner-meal-meta">⭐ Στάνταρ · ${s.items.slice(0,2).join(', ')}</div>
+          <div class="dplanner-meal-meta">⭐ Στάνταρ</div>
         </div>
-        <div class="dplanner-meal-kcal">~${s.kcal_est}</div>
-        <button class="dplanner-add-btn" onclick="event.stopPropagation();builderPageToggle('${s.id}',true)">${sel ? '✕' : '+'}</button>
+        <div class="dplanner-meal-kcal">~${s.kcal_est} kcal</div>
+        <button class="dplanner-add-btn dplanner-add-btn--visible" onclick="event.stopPropagation();builderPageToggle('${s.id}',true)">${sel ? '✕' : '+'}</button>
       </div>`;
     });
     recipes.forEach(r => {
@@ -1321,8 +1321,8 @@ function renderBuilderPage(typeFilter) {
           <div class="dplanner-meal-name">${r.name}</div>
           <div class="dplanner-meal-meta">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div>
         </div>
-        <div class="dplanner-meal-kcal">${m.kcal}</div>
-        <button class="dplanner-add-btn" onclick="event.stopPropagation();builderPageToggle('${r.id}',false)">${sel ? '✕' : '+'}</button>
+        <div class="dplanner-meal-kcal">${m.kcal} kcal</div>
+        <button class="dplanner-add-btn dplanner-add-btn--visible" onclick="event.stopPropagation();builderPageToggle('${r.id}',false)">${sel ? '✕' : '+'}</button>
       </div>`;
     });
   });
@@ -1470,7 +1470,7 @@ function renderBuilderPage(typeFilter) {
       <!-- LEFT: Meal Library -->
       <div class="dplanner-col">
         <div class="dplanner-col-head">
-          <h3>Βιβλιοθήκη γευμάτων</h3>
+          <h3>Βιβλιοθήκη τροφίμων</h3>
           <div class="dplanner-search-wrap">
             <span class="dplanner-search-icon">🔍</span>
             <input type="text" placeholder="Αναζήτηση γευμάτων..."
