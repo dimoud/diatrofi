@@ -1281,10 +1281,9 @@ function renderBuilderPage(typeFilter) {
   const filterLabels = [
     { key: 'all',       label: 'Όλα' },
     { key: 'breakfast', label: 'Πρωινά' },
-    { key: 'snack',     label: 'Δεκατιανό' },
-    { key: 'lunch',     label: 'Μεσ/νά' },
-    { key: 'afternoon', label: 'Απογ/νό' },
+    { key: 'lunch',     label: 'Μεσημεριανά' },
     { key: 'dinner',    label: 'Βραδινά' },
+    { key: 'snack',     label: 'Σνακ' },
   ];
   const mealTypes = typeFilter === 'all'
     ? ['breakfast','snack','lunch','afternoon','dinner']
@@ -1299,7 +1298,10 @@ function renderBuilderPage(typeFilter) {
     const recipes   = allRecipes.filter(r => r.meal === t && (!libSearch || r.name.toLowerCase().includes(libSearch)));
     if (!standards.length && !recipes.length) return;
 
-    libHtml += `<div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin:10px 0 5px">${meta.icon} ${meta.label}</div>`;
+    libHtml += `<div class="dplanner-lib-section-header">
+      <span class="dplanner-lib-section-icon ${t}">${meta.icon}</span>
+      <span class="dplanner-lib-section-label">${meta.label.toUpperCase()}</span>
+    </div>`;
     standards.forEach(s => {
       const sel = builderMeals.find(x => x.id === s.id && x.isStandard);
       libHtml += `<div class="dplanner-meal-card ${sel ? 'selected-dp' : ''}" onclick="builderPageToggle('${s.id}',true)">
