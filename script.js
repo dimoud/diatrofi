@@ -148,7 +148,9 @@ function addBodyMeasurement() {
     state.profile.weight = latest.weight;
   }
   saveState();
-  renderProfile();
+  // Ανανέωση stats tab (όπου είναι η κάρτα μετρήσεων)
+  const bodyCard = document.getElementById('stats-body-content');
+  if (bodyCard) bodyCard.innerHTML = renderBodyMeasurementsCard();
   showToast('✅ Μέτρηση αποθηκεύτηκε!');
 }
 
@@ -156,7 +158,8 @@ function deleteBodyEntry(date) {
   if (!state.bodyLog) return;
   state.bodyLog = state.bodyLog.filter(e => e.date !== date);
   saveState();
-  renderProfile();
+  const bodyCard = document.getElementById('stats-body-content');
+  if (bodyCard) bodyCard.innerHTML = renderBodyMeasurementsCard();
   showToast('🗑 Εγγραφή διαγράφηκε');
 }
 
@@ -481,8 +484,8 @@ function renderProfile() {
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px" id="profile-stats-card">
         <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center">
           <div style="width:44px;height:44px;border-radius:50%;background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 8px">⚖️</div>
-          <div style="font-size:1.55rem;font-weight:900;color:${bmiCol};line-height:1">${bmi}</div>
-          <div style="font-size:0.68rem;font-weight:700;color:${bmiCol};margin-top:2px">${bmiLbl}</div>
+          <div class="bmi-val" style="font-size:1.55rem;font-weight:900;color:${bmiCol};line-height:1">${bmi}</div>
+          <div class="bmi-lbl" style="font-size:0.68rem;font-weight:700;color:${bmiCol};margin-top:2px">${bmiLbl}</div>
           <div style="font-size:0.6rem;color:var(--text3);margin-top:2px">BMI</div>
         </div>
         <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center">
@@ -560,18 +563,18 @@ function renderProfile() {
         <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px">
           <div style="font-size:0.72rem;font-weight:700;color:var(--text2);margin-bottom:8px">🔢 Αυτόματος Υπολογισμός</div>
           <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:4px">
-            <span>BMR (Mifflin-St Jeor)</span><strong>${bmr} kcal</strong>
+            <span>BMR (Mifflin-St Jeor)</span><strong id="td-bmr">${bmr} kcal</strong>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:4px">
-            <span>× Συντελεστής δραστηριότητας (${parseFloat(p.activity||1.50).toFixed(2)})</span>
-            <strong>${Math.round(bmr * (p.activity||1.50))} kcal</strong>
+            <span id="td-act-lbl">× Συντελεστής δραστηριότητας (${parseFloat(p.activity||1.50).toFixed(2)})</span>
+            <strong id="td-act">${Math.round(bmr * (p.activity||1.50))} kcal</strong>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:8px">
-            <span>+ Διόρθωση βημάτων (${(p.dailySteps||0).toLocaleString()} βήμ/ημ)</span>
-            <strong>+${calcStepAdjustment(p.dailySteps||0)} kcal</strong>
+            <span id="td-steps-lbl">+ Διόρθωση βημάτων (${(p.dailySteps||0).toLocaleString()} βήμ/ημ)</span>
+            <strong id="td-steps">+${calcStepAdjustment(p.dailySteps||0)} kcal</strong>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:900;color:var(--green-d);border-top:1.5px solid var(--border);padding-top:8px">
-            <span>= Προτεινόμενο TDEE</span><span>${suggestedTDEE} kcal</span>
+            <span>= Προτεινόμενο TDEE</span><span id="td-result">${suggestedTDEE} kcal</span>
           </div>
         </div>
 
@@ -613,7 +616,7 @@ function renderProfile() {
             class="prof-range-amber"
             oninput="updateGoalFromProfile('kcal',this.value)" style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
-            <span>1200</span><span style="color:var(--amber);font-weight:700">TDEE: ${tdee}</span><span>3500</span>
+            <span>1200</span><span id="td-slider-tdee" style="color:var(--amber);font-weight:700">TDEE: ${tdee}</span><span>3500</span>
           </div>
         </div>
 
@@ -626,7 +629,7 @@ function renderProfile() {
             class="prof-range-blue"
             oninput="updateGoalFromProfile('protein',this.value)" style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
-            <span>60g</span><span style="color:var(--blue);font-weight:700">Συν. 1.9g/kg: ${idealProt}g</span><span>300g</span>
+            <span>60g</span><span id="td-prot-hint" style="color:var(--blue);font-weight:700">Συν. 1.9g/kg: ${idealProt}g</span><span>300g</span>
           </div>
         </div>
 
@@ -656,10 +659,6 @@ function renderProfile() {
           </div>
         </div>
 
-        <div style="background:${macroQuality.bg};border-radius:var(--radius-sm);padding:10px 14px;font-size:0.82rem;color:${macroQuality.color};font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:6px">
-          ${macroQuality.icon} ${macroQuality.text}
-        </div>
-
         <div style="display:flex;gap:8px">
           <button class="btn btn-green" style="flex:1" onclick="applyTDEEGoal()">⚡ Auto από TDEE</button>
           <button class="btn btn-ghost" style="flex:1" onclick="saveProfile()">💾 Αποθήκευση</button>
@@ -684,9 +683,6 @@ function renderProfile() {
         </div>` : ''}
       </div>
 
-      <!-- ΜΕΤΡΗΣΕΙΣ ΣΩΜΑΤΟΣ -->
-      ${renderBodyMeasurementsCard()}
-
       <!-- ΕΚΤΥΠΩΣΗ & ΣΥΝΟΨΗ -->
       <div class="card card-lg fade-in">
         <div class="section-title">🖨️ Εκτύπωση &amp; Σύνοψη</div>
@@ -704,6 +700,12 @@ function renderProfile() {
       </div>
 
     </div>`;
+  // If settings tab is currently visible, sync its profile section
+  if (state.activeTab === 'settings') {
+    const dst = document.getElementById('settings-profile-content');
+    const src = document.getElementById('page-profile');
+    if (dst && src) dst.innerHTML = src.innerHTML;
+  }
 }
 
 function liveUpdateName(val) {
@@ -727,12 +729,54 @@ function liveUpdateProfile() {
   if (acEl) p.activity   = parseFloat(acEl.value);
   if (stEl) p.dailySteps = parseInt(stEl.value)    || 0;
 
-  // Αν ο χρήστης ΔΕΝ έχει ορίσει custom TDEE, καθαρίζουμε το customTDEE
-  // ώστε η αυτόματη τιμή να ενημερώνεται με κάθε αλλαγή βάρους
   if (!p.useCustomTDEE) p.customTDEE = 0;
 
   saveState();
-  renderProfile();
+
+  // Δυναμική ενημέρωση BMR / TDEE / BMI χωρίς full re-render
+  const bmr          = calcBMR(p);
+  const suggestedTDEE = calcSuggestedTDEE(p);
+  const tdee         = calcTDEE(p);
+  const bmi          = calcBMI(p.weight, p.height);
+  const { label: bmiLbl, color: bmiCol } = bmiLabel(parseFloat(bmi));
+  const stepAdj      = calcStepAdjustment(p.dailySteps || 0);
+  const actMult      = parseFloat(p.activity || 1.50).toFixed(2);
+
+  // Stat chips
+  const bmrEl  = document.querySelector('.bmr-val');
+  const tdeeEl = document.querySelector('.tdee-val');
+  const bmiEl  = document.querySelector('.bmi-val');
+  const bmiLblEl = document.querySelector('.bmi-lbl');
+  if (bmrEl)   { bmrEl.textContent  = bmr; }
+  if (tdeeEl)  { tdeeEl.textContent = tdee; }
+  if (bmiEl)   { bmiEl.textContent  = bmi;    bmiEl.style.color   = bmiCol; }
+  if (bmiLblEl){ bmiLblEl.textContent = bmiLbl; bmiLblEl.style.color = bmiCol; }
+
+  // TDEE breakdown lines
+  const tdBmr    = document.getElementById('td-bmr');
+  const tdAct    = document.getElementById('td-act');
+  const tdSteps  = document.getElementById('td-steps');
+  const tdResult = document.getElementById('td-result');
+  const tdActLbl = document.getElementById('td-act-lbl');
+  const tdStepsLbl = document.getElementById('td-steps-lbl');
+  if (tdBmr)    tdBmr.textContent    = bmr + ' kcal';
+  if (tdActLbl) tdActLbl.textContent = `× Συντελεστής δραστηριότητας (${actMult})`;
+  if (tdAct)    tdAct.textContent    = Math.round(bmr * parseFloat(p.activity || 1.50)) + ' kcal';
+  if (tdStepsLbl) tdStepsLbl.textContent = `+ Διόρθωση βημάτων (${(p.dailySteps||0).toLocaleString()} βήμ/ημ)`;
+  if (tdSteps)  tdSteps.textContent  = '+' + stepAdj + ' kcal';
+  if (tdResult) tdResult.textContent = suggestedTDEE + ' kcal';
+
+  // Protein ideal hint
+  const protHintEl = document.getElementById('td-prot-hint');
+  if (protHintEl) protHintEl.textContent = `Συν. 1.9g/kg: ${calcIdealProtein(p.weight)}g`;
+
+  // TDEE label on kcal slider
+  const tdeeSliderLbl = document.getElementById('td-slider-tdee');
+  if (tdeeSliderLbl) tdeeSliderLbl.textContent = `TDEE: ${tdee}`;
+
+  // Update steps value label
+  const stepsValEl = document.getElementById('prof-steps-val');
+  if (stepsValEl) stepsValEl.textContent = p.dailySteps || 0;
 }
 
 function updateGoalFromProfile(key, val) {
@@ -1025,6 +1069,27 @@ function renderToday() {
 
   document.getElementById('page-today').innerHTML = `
     <div class="container">
+      <!-- Day selector -->
+      <div class="card card-sm fade-in">
+        <div class="week-grid">
+          ${state.week.map((d,i) => {
+            const allDone = d.meals.length > 0 && d.meals.every(me => me.done);
+            const hasExtra = (d.extraKcal || 0) > 0;
+            const btnStyle = allDone
+              ? 'background:var(--green);color:#fff;border-color:var(--green)'
+              : hasExtra
+              ? 'background:#ef4444;color:#fff;border-color:#ef4444'
+              : '';
+            const dateStr = state.planStartDate
+              ? `<div style="font-size:0.55rem;opacity:0.85">${formatPlanDay(i)}</div>` : '';
+            return `<button class="week-day-btn ${i===state.currentDay?'active':''}" onclick="setDay(${i})" style="${btnStyle}">
+              <div class="wday">Η${d.day}</div>
+              ${dateStr}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+
       <!-- Quote -->
       <div class="quote-banner fade-in">
         <div class="quote-text">«${q.text}»</div>
@@ -1115,27 +1180,6 @@ function renderToday() {
           <div class="macro-card-value" style="color:#22c55e">${doneMacros.kcal}</div>
           <div class="macro-card-sub">kcal · ${day.meals.filter(m=>m.done).length}/${day.meals.length} γεύματα</div>
           ${macroBar(doneMacros.kcal, effectiveKcal, '#22c55e')}
-        </div>
-      </div>
-
-      <!-- Day selector -->
-      <div class="card card-sm fade-in">
-        <div class="week-grid">
-          ${state.week.map((d,i) => {
-            const allDone = d.meals.length > 0 && d.meals.every(me => me.done);
-            const hasExtra = (d.extraKcal || 0) > 0;
-            const btnStyle = allDone
-              ? 'background:var(--green);color:#fff;border-color:var(--green)'
-              : hasExtra
-              ? 'background:#ef4444;color:#fff;border-color:#ef4444'
-              : '';
-            const dateStr = state.planStartDate
-              ? `<div style="font-size:0.55rem;opacity:0.85">${formatPlanDay(i)}</div>` : '';
-            return `<button class="week-day-btn ${i===state.currentDay?'active':''}" onclick="setDay(${i})" style="${btnStyle}">
-              <div class="wday">Η${d.day}</div>
-              ${dateStr}
-            </button>`;
-          }).join('')}
         </div>
       </div>
 
@@ -2249,7 +2293,7 @@ function saveDayAsTemplate() {
   showToast(`💾 Αποθηκεύτηκε ως "${name}"`);
   // Refresh σωστής σελίδας
   if (state.activeTab === 'builder') renderBuilderPage();
-  else renderOptimize();
+  else renderSettingsPage();
 }
 
 function deleteTemplate(ti) {
@@ -2257,7 +2301,7 @@ function deleteTemplate(ti) {
   state.dayTemplates.splice(ti, 1);
   saveState();
   if (state.activeTab === 'builder') renderBuilderPage();
-  else renderOptimize();
+  else renderSettingsPage();
   showToast('🗑 Πρότυπο διαγράφηκε');
 }
 
@@ -2285,7 +2329,7 @@ function applyTemplateToDay(ti, dayIdx) {
   saveState();
   closeModal();
   showToast(`✅ "${tpl.name}" → Ημέρα ${dayIdx+1}`);
-  if (dayIdx === state.currentDay) { navigateTo('today'); } else { renderOptimize(); }
+  if (dayIdx === state.currentDay) { navigateTo('today'); } else { renderSettingsPage(); }
 }
 
 
@@ -2307,7 +2351,7 @@ function updateGoal(key, val) {
 function resetGoals() {
   state.goals = { ...DEFAULT_GOALS };
   saveState();
-  renderOptimize();
+  renderSettingsPage();
   showToast('↺ Στόχοι επαναφέρθηκαν');
 }
 
@@ -3213,22 +3257,246 @@ function exportPDF() {
 
 // ── NAVIGATION & UTILITIES ──
 function navigateTo(tab) {
+  // Map legacy tabs to new structure
+  const legacyMap = { profile: 'settings', optimize: 'settings', recipes: 'ideas', foods: 'ideas' };
+  if (legacyMap[tab]) tab = legacyMap[tab];
+
   state.activeTab = tab;
   saveState();
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+
+  // Show/hide pages (only the new top-level pages)
+  const newPages = ['today','week','ideas','builder','stats','settings'];
+  newPages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.remove('active');
+  });
   const page = document.getElementById('page-' + tab);
   if (page) page.classList.add('active');
-  const btn = document.querySelector(`.tab-item[data-tab="${tab}"]`);
-  if (btn) btn.classList.add('active');
+
+  // Update bottom bar + sidebar
+  document.querySelectorAll('.tab-item, .sidebar-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
+
   if (tab === 'today')    renderToday();
   if (tab === 'week')     renderWeek();
-  if (tab === 'profile')  renderProfile();
-  if (tab === 'recipes')  renderRecipes();
-  if (tab === 'foods')    renderFoods();
-  if (tab === 'optimize') renderOptimize();
+  if (tab === 'ideas')    renderIdeasPage();
   if (tab === 'builder')  renderBuilderPage();
+  if (tab === 'stats')    renderStatsPage();
+  if (tab === 'settings') renderSettingsPage();
 }
+
+function renderIdeasPage() {
+  const el = document.getElementById('page-ideas');
+  if (!el) return;
+  // Render sub-tabs: Συνταγές | Τρόφιμα
+  el.innerHTML = `
+    <div class="container fade-in">
+      <div class="segment" style="margin-top:14px">
+        <button class="seg-btn active" id="ideas-tab-recipes" onclick="showIdeasTab('recipes')">📖 Συνταγές</button>
+        <button class="seg-btn" id="ideas-tab-foods" onclick="showIdeasTab('foods')">🥦 Τρόφιμα</button>
+      </div>
+      <div id="ideas-recipes-content"></div>
+      <div id="ideas-foods-content" style="display:none"></div>
+    </div>`;
+  renderRecipesInto(document.getElementById('ideas-recipes-content'));
+  renderFoodsInto(document.getElementById('ideas-foods-content'));
+}
+
+function showIdeasTab(which) {
+  document.getElementById('ideas-tab-recipes').classList.toggle('active', which === 'recipes');
+  document.getElementById('ideas-tab-foods').classList.toggle('active', which === 'foods');
+  document.getElementById('ideas-recipes-content').style.display = which === 'recipes' ? '' : 'none';
+  document.getElementById('ideas-foods-content').style.display   = which === 'foods'   ? '' : 'none';
+}
+
+function renderStatsPage() {
+  const el = document.getElementById('page-stats');
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="container fade-in" style="padding-top:14px">
+      <div class="segment" style="margin-top:0">
+        <button class="seg-btn active" id="stats-tab-overview" onclick="showStatsTab('overview')">📊 Σύνοψη</button>
+        <button class="seg-btn" id="stats-tab-body" onclick="showStatsTab('body')">⚖️ Μετρήσεις</button>
+        <button class="seg-btn" id="stats-tab-activity" onclick="showStatsTab('activity')">🏃 Δραστηριότητα</button>
+      </div>
+      <div id="stats-overview-content"></div>
+      <div id="stats-body-content" style="display:none"></div>
+      <div id="stats-activity-content" style="display:none"></div>
+    </div>`;
+
+  renderStatsOverview();
+  renderStatsActivity();
+  document.getElementById('stats-body-content').innerHTML = renderBodyMeasurementsCard();
+}
+
+function showStatsTab(which) {
+  ['overview','body','activity'].forEach(t => {
+    document.getElementById(`stats-tab-${t}`).classList.toggle('active', t === which);
+    document.getElementById(`stats-${t}-content`).style.display = t === which ? '' : 'none';
+  });
+}
+
+function renderStatsOverview() {
+  const weekData = state.week.map((day, i) => {
+    const m = calcDayMacros(i, false);
+    const { deficit, stepsKcal, trainingKcal } = calcDayDeficit(i);
+    return { day, idx: i, ...m, deficit, stepsKcal, trainingKcal };
+  });
+
+  const DAYS_EL = ['Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ','Κυρ'];
+  const goals = state.goals;
+  const avgKcal = Math.round(weekData.reduce((s,d) => s + d.kcal, 0) / 7);
+  const avgP    = Math.round(weekData.reduce((s,d) => s + d.p,   0) / 7);
+  const avgC    = Math.round(weekData.reduce((s,d) => s + d.c,   0) / 7);
+  const avgF    = Math.round(weekData.reduce((s,d) => s + d.f,   0) / 7);
+  const totalDeficit = weekData.reduce((s,d) => s + d.deficit, 0);
+
+  const barsHtml = weekData.map((d, i) => {
+    const pct = Math.min(100, Math.round((d.kcal / (goals.kcal || 2000)) * 100));
+    const isToday = i === state.currentDay;
+    const color = isToday ? 'var(--purple)' : (pct >= 90 ? 'var(--green-d)' : pct >= 60 ? 'var(--amber)' : 'var(--red)');
+    return `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+        <div style="font-size:0.65rem;font-weight:700;color:${isToday?'var(--purple)':'var(--text3)'}">${d.kcal > 0 ? pct+'%' : '—'}</div>
+        <div style="width:100%;background:var(--border);border-radius:6px 6px 0 0;height:90px;position:relative;overflow:hidden;align-self:flex-end">
+          <div style="position:absolute;bottom:0;left:0;right:0;height:${pct}%;background:${color};border-radius:4px 4px 0 0;transition:height 0.5s ease"></div>
+        </div>
+        <div style="font-size:0.65rem;font-weight:${isToday?'800':'600'};color:${isToday?'var(--purple)':'var(--text2)'}">${DAYS_EL[i]}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('stats-overview-content').innerHTML = `
+    <!-- Summary cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="macro-card">
+        <div class="macro-card-label">Μ.Ό. Kcal/ημ</div>
+        <div class="macro-card-value" style="color:var(--green-d)">${avgKcal}</div>
+        <div class="macro-card-sub">Στόχος ${goals.kcal || '—'}</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-card-label">Μ.Ό. Πρωτεΐνη</div>
+        <div class="macro-card-value" style="color:var(--blue)">${avgP}g</div>
+        <div class="macro-card-sub">Στόχος ${goals.protein || '—'}g</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-card-label">Εβδ. Ισοζύγιο</div>
+        <div class="macro-card-value" style="color:${totalDeficit>0?'var(--green-d)':'var(--red)'}">${Math.abs(Math.round(totalDeficit))}</div>
+        <div class="macro-card-sub">${totalDeficit>0?'kcal έλλειμμα':'kcal πλεόνασμα'}</div>
+      </div>
+    </div>
+
+    <!-- Kcal bar chart -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3>Θερμίδες ανά ημέρα</h3>
+        <span style="font-size:0.72rem;color:var(--text3)">Στόχος: ${goals.kcal||'—'} kcal</span>
+      </div>
+      <div style="display:flex;gap:5px;align-items:flex-end;height:100px">
+        ${barsHtml}
+      </div>
+    </div>
+
+    <!-- Macros avg -->
+    <div class="card">
+      <h3 style="margin-bottom:12px">Μέσος Όρος Μακροθρεπτικών</h3>
+      ${[
+        { lbl:'🥩 Πρωτεΐνη', val:avgP, goal: goals.protein||180, color:'var(--blue)' },
+        { lbl:'🍚 Υδατάνθρακες', val:avgC, goal: goals.carbs||200, color:'var(--amber)' },
+        { lbl:'🫒 Λίπη', val:avgF, goal: goals.fat||60, color:'var(--purple)' },
+      ].map(m => {
+        const pct = Math.min(100, Math.round((m.val / m.goal) * 100));
+        return `
+          <div class="dplanner-mbar">
+            <div class="dplanner-mbar-label">
+              <span>${m.lbl}</span>
+              <span>${m.val}g / ${m.goal}g <span style="color:var(--text3)">(${pct}%)</span></span>
+            </div>
+            <div class="dplanner-mbar-track">
+              <div class="dplanner-mbar-fill" style="width:${pct}%;background:${m.color}"></div>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderStatsActivity() {
+  const weekData = state.week.map((day, i) => {
+    const { stepsKcal, trainingKcal } = calcDayDeficit(i);
+    return { day, idx: i, stepsKcal, trainingKcal };
+  });
+  const DAYS_EL = ['Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ','Κυρ'];
+  const totalStepsKcal    = weekData.reduce((s,d) => s + d.stepsKcal, 0);
+  const totalTrainingKcal = weekData.reduce((s,d) => s + d.trainingKcal, 0);
+  const trainingDays      = weekData.filter(d => d.day.weightTraining).length;
+  const stepsDoneDays     = weekData.filter(d => d.day.stepsDone).length;
+
+  document.getElementById('stats-activity-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="macro-card">
+        <div class="macro-card-label">Βήματα (εβδ. kcal)</div>
+        <div class="macro-card-value" style="color:var(--cyan)">${totalStepsKcal}</div>
+        <div class="macro-card-sub">${stepsDoneDays}/7 ημέρες ✅</div>
+      </div>
+      <div class="macro-card">
+        <div class="macro-card-label">Γυμναστήριο (kcal)</div>
+        <div class="macro-card-value" style="color:var(--purple)">${totalTrainingKcal}</div>
+        <div class="macro-card-sub">${trainingDays}/7 προπονήσεις</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">Ανά ημέρα</h3>
+      ${weekData.map((d,i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem">
+          <span style="font-weight:800;min-width:34px;color:${i===state.currentDay?'var(--purple)':'var(--text)'}">${DAYS_EL[i]}</span>
+          <span style="color:var(--text2)">
+            ${d.day.stepsDone
+              ? `<span style="color:var(--green-d)">👟 ${(d.day.stepsCount||8000).toLocaleString()}</span>`
+              : `<span style="color:var(--text3)">👟 ${(d.day.stepsCount||8000).toLocaleString()}</span>`}
+          </span>
+          <span>${d.day.weightTraining ? '🏋️' : '<span style="color:var(--text3)">—</span>'}</span>
+          <span style="font-weight:700;color:${d.stepsKcal+d.trainingKcal>0?'var(--green-d)':'var(--text3)'}">
+            ${d.stepsKcal+d.trainingKcal > 0 ? '+'+( d.stepsKcal+d.trainingKcal)+' kcal' : '0 kcal'}
+          </span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderSettingsPage() {
+  const el = document.getElementById('page-settings');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="container fade-in" style="padding-top:14px">
+      <div class="segment" style="margin-top:0">
+        <button class="seg-btn active" id="settings-tab-profile" onclick="showSettingsTab('profile')">👤 Προφίλ</button>
+        <button class="seg-btn" id="settings-tab-optimize" onclick="showSettingsTab('optimize')">⚡ Βελτίωση</button>
+      </div>
+      <div id="settings-profile-content"></div>
+      <div id="settings-optimize-content" style="display:none"></div>
+    </div>`;
+  // Render into sub-containers
+  renderProfileInto(document.getElementById('settings-profile-content'));
+  renderOptimizeInto(document.getElementById('settings-optimize-content'));
+}
+
+function showSettingsTab(which) {
+  document.getElementById('settings-tab-profile').classList.toggle('active', which === 'profile');
+  document.getElementById('settings-tab-optimize').classList.toggle('active', which === 'optimize');
+  document.getElementById('settings-profile-content').style.display  = which === 'profile'  ? '' : 'none';
+  document.getElementById('settings-optimize-content').style.display = which === 'optimize' ? '' : 'none';
+}
+
+// Wrappers: temporarily mount a hidden page, render, move innerHTML (onclick attrs survive)
+function _renderInto(targetEl, hiddenPageId, renderFn) {
+  if (!targetEl) return;
+  renderFn();
+  const src = document.getElementById(hiddenPageId);
+  if (src) targetEl.innerHTML = src.innerHTML;
+}
+function renderProfileInto(el)  { _renderInto(el, 'page-profile',  renderProfile);  }
+function renderOptimizeInto(el) { _renderInto(el, 'page-optimize', renderOptimize); }
+function renderRecipesInto(el)  { _renderInto(el, 'page-recipes',  renderRecipes);  }
+function renderFoodsInto(el)    { _renderInto(el, 'page-foods',    renderFoods);    }
 
 let _toastTimer = null;
 function showToast(msg, dur = 2200) {
@@ -3243,7 +3511,7 @@ function showToast(msg, dur = 2200) {
 // -- INIT --
 document.addEventListener('DOMContentLoaded', () => {
   loadState();
-  document.querySelectorAll('.tab-item').forEach(btn => {
+  document.querySelectorAll('.tab-item, .sidebar-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.getAttribute('data-tab');
       navigateTo(tab);
@@ -3255,7 +3523,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === overlay) closeModal();
     });
   }
-  navigateTo(state.activeTab || 'today');
+  // Map legacy saved tabs to new tabs
+  const legacyMap = { profile: 'settings', optimize: 'settings', recipes: 'ideas', foods: 'ideas' };
+  const savedTab = state.activeTab || 'today';
+  navigateTo(legacyMap[savedTab] || savedTab);
 
   // Κρύψιμο top nav (+ VIVON μέσα) με scroll-down
   let lastScrollY = window.scrollY;
