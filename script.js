@@ -270,6 +270,10 @@ function addBodyMeasurement() {
   if (state.bodyLog.length > 0) {
     const latest = state.bodyLog[state.bodyLog.length - 1];
     state.profile.weight = latest.weight;
+    // Sync settings weight field and recalculate derived stats without full re-render
+    const wEl = document.getElementById('prof-weight');
+    if (wEl) wEl.value = latest.weight;
+    liveUpdateProfile();
   }
   saveState();
   const bodyCard = document.getElementById('body-page-content');
@@ -1047,55 +1051,35 @@ function renderProfile() {
             <strong id="prof-kcal-val" style="color:var(--amber)">${g.kcal} kcal</strong>
           </div>
           <input type="range" id="prof-kcal" min="1000" max="3500" step="50" value="${g.kcal}"
-            class="prof-range-amber"
+            class="prof-range-amber goal-slider"
             oninput="updateGoalFromProfile('kcal',this.value)" style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
-            <span>1200</span><span id="td-slider-tdee" style="color:var(--amber);font-weight:700">TDEE: ${tdee}</span><span>3500</span>
+            <span>1000</span><span id="td-slider-tdee" style="color:var(--amber);font-weight:700">TDEE: ${tdee}</span><span>3500</span>
           </div>
         </div>
 
-        <div style="margin-bottom:16px">
+        <div style="margin-bottom:4px">
           <div class="slider-label" style="margin-bottom:6px">
             <span style="display:flex;align-items:center;gap:6px">🥩 <span>Πρωτεΐνη</span></span>
             <strong id="prof-prot-val" style="color:var(--blue)">${g.protein}g</strong>
           </div>
           <input type="range" id="prof-prot" min="60" max="300" step="5" value="${g.protein}"
-            class="prof-range-blue"
+            class="prof-range-blue goal-slider"
             oninput="updateGoalFromProfile('protein',this.value)" style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
             <span>60g</span><span id="td-prot-hint" style="color:var(--blue);font-weight:700">Συν. 1.9g/kg: ${idealProt}g</span><span>300g</span>
           </div>
         </div>
 
-        <div style="margin-bottom:16px">
-          <div class="slider-label" style="margin-bottom:6px">
-            <span style="display:flex;align-items:center;gap:6px">🍚 <span>Υδατάνθρακες</span></span>
-            <strong id="prof-carb-val" style="color:var(--green-d)">${g.carbs}g</strong>
-          </div>
-          <input type="range" id="prof-carb" min="30" max="500" step="5" value="${g.carbs}"
-            class="prof-range-green"
-            oninput="updateGoalFromProfile('carbs',this.value)" style="width:100%">
-          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
-            <span>30g</span><span></span><span>500g</span>
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px">
-          <div class="slider-label" style="margin-bottom:6px">
-            <span style="display:flex;align-items:center;gap:6px">🫒 <span>Λίπος</span></span>
-            <strong id="prof-fat-val" style="color:var(--purple)">${g.fat}g</strong>
-          </div>
-          <input type="range" id="prof-fat" min="20" max="200" step="5" value="${g.fat}"
-            class="prof-range-purple"
-            oninput="updateGoalFromProfile('fat',this.value)" style="width:100%">
-          <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
-            <span>20g</span><span></span><span>200g</span>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-green" style="flex:1" onclick="applyTDEEGoal()">⚡ Auto από TDEE</button>
-          <button class="btn btn-ghost" style="flex:1" onclick="saveProfile()">💾 Αποθήκευση</button>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px">
+          <button onclick="applyTDEEGoal()" title="Επαναφορά από TDEE"
+            style="background:none;border:none;padding:4px 2px;cursor:pointer;opacity:0.3;transition:opacity 0.15s;line-height:1"
+            onmouseenter="this.style.opacity='0.7'" onmouseleave="this.style.opacity='0.3'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -1153,13 +1137,6 @@ function renderProfile() {
         <button class="btn btn-blue btn-full" onclick="exportPDF()" style="margin-bottom:10px">
           🖨️ Εκτύπωση / Αποθήκευση PDF
         </button>
-        <button class="btn btn-ghost btn-full" onclick="shareProfile()">
-          🔗 Κοινοποίηση πλάνου
-        </button>
-        <div style="margin-top:12px;font-size:0.75rem;color:var(--text3);line-height:1.7">
-          Η αναφορά περιλαμβάνει:<br>
-          ✅ Εβδομαδιαίο πλάνο &nbsp; ✅ Σύνοψη θερμίδων &amp; μακροθρεπτικών &nbsp; ✅ Λίστα γευμάτων &amp; συνταγών
-        </div>
       </div>
 
     </div>`;
@@ -1169,6 +1146,24 @@ function renderProfile() {
     const src = document.getElementById('page-profile');
     if (dst && src) dst.innerHTML = src.innerHTML;
   }
+  initGoalSliders();
+}
+
+function initGoalSliders() {
+  const sliders = document.querySelectorAll('.goal-slider');
+  sliders.forEach(s => {
+    s.addEventListener('pointerdown', () => {
+      sliders.forEach(other => {
+        if (other !== s) other.classList.add('goal-slider--locked');
+      });
+    });
+    s.addEventListener('pointerup', () => {
+      sliders.forEach(other => other.classList.remove('goal-slider--locked'));
+    });
+    s.addEventListener('pointercancel', () => {
+      sliders.forEach(other => other.classList.remove('goal-slider--locked'));
+    });
+  });
 }
 
 function updateSidebarAvatar() {
@@ -4906,7 +4901,7 @@ async function initApp() {
   document.querySelectorAll('.tab-item, .sidebar-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.getAttribute('data-tab');
-      navigateTo(tab);
+      if (tab) navigateTo(tab);
     });
   });
   const overlay = document.getElementById('modal-overlay');

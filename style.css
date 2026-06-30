@@ -1073,6 +1073,23 @@ input[type="range"]::-moz-range-thumb {
 .prof-range-purple::-moz-range-thumb     { background: var(--purple) !important; }
 .prof-range-purple { accent-color: var(--purple); }
 
+/* Goal sliders — smooth thumb, locked siblings dim */
+.goal-slider {
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+.goal-slider::-webkit-slider-thumb {
+  transition: transform 0.12s cubic-bezier(.4,0,.2,1), box-shadow 0.12s;
+}
+.goal-slider:active::-webkit-slider-thumb {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.08);
+}
+.goal-slider--locked {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* Mode toggle */
 .mode-tabs {
   display: flex;

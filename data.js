@@ -481,14 +481,15 @@ const RECIPES_DB = [
 // Κανόνας: αν πρωί γιαούρτι → δεκατ ΟΧΙ γιαούρτι · ποικιλία ανά ημέρα
 const DEFAULT_WEEK = [
   {
-    // Ημ1: γιαούρτι+βρώμη / μήλο / κοτόσουπα / whey / γιαούρτι βραδ ≈ 1701 kcal
+    // Ημ1: γιαούρτι+βρώμη / μήλο / κοτόσουπα / whey / ομελέτα+παξιμάδι ≈ 1680 kcal
+    // Κανόνας: πρωί γιαούρτι → βραδινό ΟΧΙ γιαούρτι (r51 αντί r20)
     day: 1, label: "Ημέρα 1",
     meals: [
       { time: "07:00", type: "breakfast", recipeId: "r3",  done: false, waterNote: "Πιες 500ml νερό 💧 — Σύνολο ως τώρα: 0.5L" },
       { time: "10:00", type: "snack",     recipeId: "r31", done: false, waterNote: "Πιες 500ml νερό 💧 — Σύνολο ως τώρα: 1.0L" },
       { time: "13:00", type: "lunch",     recipeId: "r18", done: false, waterNote: "Πιες 500ml νερό 💧 — Σύνολο ως τώρα: 1.5L" },
       { time: "16:00", type: "afternoon",     recipeId: "r30", done: false, waterNote: "Πιες 500ml νερό 💧 — Σύνολο ως τώρα: 2.0L" },
-      { time: "19:30", type: "dinner",    recipeId: "r20", done: false, waterNote: "Πιες 1L νερό 💧 — Στόχος: 3L ✅" },
+      { time: "19:30", type: "dinner",    recipeId: "r51", done: false, waterNote: "Πιες 1L νερό 💧 — Στόχος: 3L ✅" },
     ]
   },
   {
