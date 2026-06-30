@@ -37,11 +37,11 @@ const I18N = {
   sidebar_logout:   { el: '⏏ Αποσύνδεση',en: '⏏ Sign out',  es: '⏏ Salir',     fr: '⏏ Déconnexion' },
 
   // ── Settings tabs ──
-  settings_profile:     { el: '👤 Προφίλ',         en: '👤 Profile',         es: '👤 Perfil',         fr: '👤 Profil' },
-  settings_optimize:    { el: '⚡ Βελτίωση',        en: '⚡ Optimize',        es: '⚡ Optimizar',      fr: '⚡ Optimiser' },
-  settings_supplements: { el: '💊 Συμπληρώματα',    en: '💊 Supplements',     es: '💊 Suplementos',    fr: '💊 Suppléments' },
-  settings_language:    { el: '🌐 Γλώσσα',          en: '🌐 Language',        es: '🌐 Idioma',         fr: '🌐 Langue' },
-  settings_feedback:    { el: '💬 Σχόλια & Δωρεά',  en: '💬 Feedback & Donate',es: '💬 Opinión & Donación',fr: '💬 Avis & Don' },
+  settings_profile:     { el: 'Προφίλ',         en: 'Profile',         es: 'Perfil',         fr: 'Profil' },
+  settings_optimize:    { el: 'Βελτίωση',        en: 'Optimize',        es: 'Optimizar',      fr: 'Optimiser' },
+  settings_supplements: { el: 'Συμπληρώματα',    en: 'Supplements',     es: 'Suplementos',    fr: 'Suppléments' },
+  settings_language:    { el: 'Γλώσσα',          en: 'Language',        es: 'Idioma',         fr: 'Langue' },
+  settings_feedback:    { el: 'Σχόλια & Δωρεά',  en: 'Feedback & Donate',es: 'Opinión & Donación',fr: 'Avis & Don' },
   settings_save:        { el: '💾 Αποθήκευση ρυθμίσεων', en: '💾 Save settings', es: '💾 Guardar ajustes', fr: '💾 Enregistrer' },
   settings_saving:      { el: 'Αποθήκευση...',       en: 'Saving...',          es: 'Guardando...',      fr: 'Enregistrement...' },
   settings_saved:       { el: '✅ Οι ρυθμίσεις αποθηκεύτηκαν!', en: '✅ Settings saved!', es: '✅ ¡Ajustes guardados!', fr: '✅ Paramètres enregistrés !' },

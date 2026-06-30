@@ -306,11 +306,11 @@ test('3 eggs (τεμ) — protein', () => {
   assertEq(calcRecipeMacros(eggRecipe).p, 18);
 });
 
-// Unit = 'ψεκ' (spray oil, l1: kcal=884/100ml, sprayFactor=0.25ml)
-const sprayRecipe = { ingredients: [{ foodId: 'l1', qty: 4 }] }; // 4 sprays
+// Unit = 'κ.γ.' (κουταλάκι γλυκού = 5ml, l1: kcal=884/100ml, sprayFactor=5ml)
+const sprayRecipe = { ingredients: [{ foodId: 'l1', qty: 2 }] }; // 2 κ.γ. = 10ml
 
-test('4 sprays of olive oil — kcal (4 * 0.25ml * 884/100)', () => {
-  const expected = Math.round(4 * 0.25 * 884 / 100);
+test('2 κ.γ. of olive oil — kcal (2 * 5ml * 884/100)', () => {
+  const expected = Math.round(2 * 5 * 884 / 100);
   assertEq(calcRecipeMacros(sprayRecipe).kcal, expected);
 });
 

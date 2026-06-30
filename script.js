@@ -1594,8 +1594,9 @@ function renderToday() {
         const food = allFoods.find(f => f.id === ing.foodId);
         if (!food) return '';
         let qty = ing.qty * sf;
-        // Στρογγυλοποίηση: g→δεκάδα, τεμ/ψεκ→1
+        // Στρογγυλοποίηση: g→δεκάδα, κ.γ./κ.σ.→0.5, τεμ→1
         if (food.unit === 'g') qty = Math.round(qty / 10) * 10;
+        else if (food.unit === 'κ.γ.' || food.unit === 'κ.σ.') qty = Math.round(qty * 2) / 2;
         else qty = Math.round(qty);
         // Whey πάντα 30g
         if (ing.foodId === 'f9' && food.unit === 'g') qty = 30;
