@@ -112,7 +112,8 @@
             <div class="auth-input-wrap">
               <span class="auth-input-icon">${ICONS.user}</span>
               <input class="auth-input" id="auth-name-register" type="text"
-                     placeholder="Το όνομά σου" required autocomplete="name">
+                     placeholder="Το όνομά σου" required autocomplete="given-name"
+                     style="padding-left:42px">
             </div>
           </div>
           <div class="auth-field">

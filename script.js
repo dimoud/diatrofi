@@ -9,7 +9,7 @@ let state = {
   week: JSON.parse(JSON.stringify(DEFAULT_WEEK)),
   weekCreatedAt: Date.now(),
   currentDay: 0,
-  supplements: JSON.parse(JSON.stringify(SUPPLEMENTS_DEFAULT)),
+  supplements: JSON.parse(JSON.stringify(SUPPLEMENTS_STATE_DEFAULT)),
   favorites: [],
   customFoods: [],
   customRecipes: [],
@@ -125,7 +125,7 @@ function checkWeekReset() {
       day.weightTraining = false;
       day.extraKcal = 0;
     });
-    if (state.supplements) state.supplements.forEach(s => { s.done = false; });
+    if (state.supplements) state.supplements.done = {};
     state.weekKey = weekKey;
     state.weekCreatedAt = Date.now();
     saveState();
@@ -1271,8 +1271,8 @@ function renderToday() {
       <div class="kcal-hero fade-in">
         <div class="kcal-hero-left">
           <h2>ΑΠΟΜΕΝΟΥΝ</h2>
-          <div class="big-num">${remaining.kcal}</div>
-          <div class="sub">kcal · Φαγώθηκαν: ${doneMacros.kcal} / ${goals.kcal}</div>
+          <div class="big-num">${remaining.kcal} <span style="font-size:1rem;font-weight:600;opacity:0.75">kcal μέρας</span></div>
+          <div class="sub">kcal · Καταναλώθηκαν: ${doneMacros.kcal} / ${goals.kcal}</div>
         </div>
         <div class="kcal-ring">
           ${ring(kcalPct)}
@@ -1289,16 +1289,18 @@ function renderToday() {
         const deficitLabel = deficit >= 0 ? `−${deficit} kcal έλλειμμα` : `+${Math.abs(deficit)} kcal πλεόνασμα`;
         return `<div class="card card-sm fade-in" style="margin-bottom:10px">
           <div class="section-title" style="margin-bottom:10px">🏃 Δραστηριότητα & Έλλειμμα</div>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-            <div style="flex:1;min-width:180px">
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;justify-content:space-between">
                 <span style="font-size:0.82rem;color:var(--text2);white-space:nowrap">👣 Βήματα:</span>
-                <label class="toggle-switch" style="flex-shrink:0">
-                  <input type="checkbox" ${stepsDone ? 'checked' : ''} onchange="saveDayStepsDone(this.checked)">
-                  <span class="toggle-slider"></span>
-                </label>
-                <span style="font-size:0.82rem;font-weight:700;color:var(--text1)">${stepsCount.toLocaleString()}</span>
-                ${stepsDone ? `<span style="font-size:0.72rem;color:var(--text3)">~${stepsKcal} kcal</span>` : '<span style="font-size:0.7rem;color:var(--text3)">δεν έγιναν</span>'}
+                <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+                  <span style="font-size:0.82rem;font-weight:700;color:var(--text1)">${stepsCount.toLocaleString()}</span>
+                  ${stepsDone ? `<span style="font-size:0.72rem;color:var(--text3)">~${stepsKcal} kcal</span>` : ''}
+                  <label class="toggle-switch" style="flex-shrink:0">
+                    <input type="checkbox" ${stepsDone ? 'checked' : ''} onchange="saveDayStepsDone(this.checked)">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
               </div>
               <input type="range" min="1000" max="20000" step="500" value="${stepsCount}"
                 style="width:100%;accent-color:var(--primary)"
@@ -1307,13 +1309,15 @@ function renderToday() {
                 <span>1k</span><span>5k</span><span>8k</span><span>10k</span><span>15k</span><span>20k</span>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
               <span style="font-size:0.82rem;color:var(--text2);white-space:nowrap">🏋️ Προπόνηση βαρών (1h):</span>
-              <label class="toggle-switch" style="flex-shrink:0">
-                <input type="checkbox" ${hasTraining ? 'checked' : ''} onchange="saveDayTraining(this.checked)">
-                <span class="toggle-slider"></span>
-              </label>
-              ${hasTraining ? `<span style="font-size:0.72rem;color:var(--text3)">~${trainingKcal} kcal</span>` : ''}
+              <div style="display:flex;align-items:center;gap:8px">
+                ${hasTraining ? `<span style="font-size:0.72rem;color:var(--text3)">~${trainingKcal} kcal</span>` : ''}
+                <label class="toggle-switch" style="flex-shrink:0">
+                  <input type="checkbox" ${hasTraining ? 'checked' : ''} onchange="saveDayTraining(this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
           <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -1325,42 +1329,27 @@ function renderToday() {
         </div>`;
       })()}
 
-      <!-- Macros Dashboard -->
-      <div class="dashboard-grid fade-in">
-        <div class="macro-card">
-          <div class="macro-card-label">Πρωτεΐνη</div>
-          <div class="macro-card-value" style="color:#3b82f6">${doneMacros.p}g</div>
-          <div class="macro-card-sub">Στόχος: ${goals.protein}g · Απομένουν: ${remaining.p}g</div>
-          ${macroBar(doneMacros.p, goals.protein, '#3b82f6')}
-        </div>
-        <div class="macro-card">
-          <div class="macro-card-label">Υδατάνθρακες</div>
-          <div class="macro-card-value" style="color:#8b5cf6">${doneMacros.c}g</div>
-          <div class="macro-card-sub">Στόχος: ${goals.carbs}g · Απομένουν: ${remaining.c}g</div>
-          ${macroBar(doneMacros.c, goals.carbs, '#8b5cf6')}
-        </div>
-        <div class="macro-card">
-          <div class="macro-card-label">Λίπος</div>
-          <div class="macro-card-value" style="color:#f59e0b">${doneMacros.f}g</div>
-          <div class="macro-card-sub">Στόχος: ${goals.fat}g · Απομένουν: ${remaining.f}g</div>
-          ${macroBar(doneMacros.f, goals.fat, '#f59e0b')}
-        </div>
-        <div class="macro-card">
-          <div class="macro-card-label">Κατανάλωση</div>
-          <div class="macro-card-value" style="color:#22c55e">${doneMacros.kcal}</div>
-          <div class="macro-card-sub">kcal · ${day.meals.filter(m=>m.done).length}/${day.meals.length} γεύματα</div>
-          ${macroBar(doneMacros.kcal, effectiveKcal, '#22c55e')}
-        </div>
-      </div>
 
       <!-- Kcal ημέρας override -->
-      <div class="card card-sm fade-in" style="display:flex;align-items:center;gap:10px;padding:10px 14px">
-        <span style="font-size:0.8rem;color:var(--text2);white-space:nowrap">🎯 Kcal ημέρας:</span>
-        <input type="number" id="day-kcal-input" value="${effectiveKcal}" min="800" max="4000" step="50"
-          style="width:80px;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:0.9rem;font-weight:700;color:var(--text1);background:var(--bg2);text-align:center"
-          onchange="saveDayKcalGoal(this.value)">
-        ${day.kcalGoal ? `<span style="font-size:0.72rem;color:#f59e0b">✏️ τροποποιημένο</span>
-          <button class="btn btn-ghost btn-sm" onclick="saveDayKcalGoal(0)" style="font-size:0.72rem">↺</button>` : `<span style="font-size:0.72rem;color:var(--text3)">default ${goals.kcal}</span>`}
+      <div class="card card-sm fade-in" style="padding:8px 12px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:0.7rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.04em">🎯 Kcal ημέρας</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="day-kcal-input" value="${effectiveKcal}" min="800" max="4000" step="50"
+              style="width:60px;border:none;border-radius:6px;padding:2px 6px;font-size:0.82rem;font-weight:700;color:var(--text1);background:var(--bg2);text-align:center"
+              onchange="saveDayKcalGoal(this.value)">
+            ${day.kcalGoal
+              ? `<button class="btn btn-ghost btn-sm" onclick="saveDayKcalGoal(0)" style="font-size:0.68rem;padding:2px 6px">↺</button>`
+              : `<span style="font-size:0.68rem;color:var(--text3)">default</span>`}
+          </div>
+        </div>
+        <div style="height:4px;border-radius:2px;background:var(--border);overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:var(--green);width:${Math.min(100,Math.round(doneMacros.kcal/effectiveKcal*100))}%;transition:width 0.4s ease"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:0.62rem;color:var(--text3)">
+          <span>${doneMacros.kcal} kcal</span>
+          <span>${effectiveKcal} kcal</span>
+        </div>
       </div>
 
       <!-- Meals header + reset -->
@@ -1375,7 +1364,35 @@ function renderToday() {
       ${mealsHtml}
 
       <!-- Add Meal Button -->
-      <button class="btn btn-ghost btn-full" style="margin-bottom:14px" onclick="openAddMealModal()">➕ Προσθήκη Γεύματος</button>
+      <button class="btn btn-ghost btn-full" style="margin-bottom:10px" onclick="openAddMealModal()">➕ Προσθήκη Γεύματος</button>
+
+      <!-- Macros Dashboard -->
+      <div class="dashboard-grid fade-in" style="margin-bottom:10px">
+        <div class="macro-card" style="padding:8px 10px">
+          <div class="macro-card-label" style="font-size:0.62rem">Πρωτεΐνη</div>
+          <div class="macro-card-value" style="color:#3b82f6;font-size:1.1rem;margin:2px 0">${doneMacros.p}g</div>
+          <div class="macro-card-sub" style="font-size:0.62rem">${goals.protein}g · −${remaining.p}g</div>
+          ${macroBar(doneMacros.p, goals.protein, '#3b82f6')}
+        </div>
+        <div class="macro-card" style="padding:8px 10px">
+          <div class="macro-card-label" style="font-size:0.62rem">Υδατάνθρακες</div>
+          <div class="macro-card-value" style="color:#8b5cf6;font-size:1.1rem;margin:2px 0">${doneMacros.c}g</div>
+          <div class="macro-card-sub" style="font-size:0.62rem">${goals.carbs}g · −${remaining.c}g</div>
+          ${macroBar(doneMacros.c, goals.carbs, '#8b5cf6')}
+        </div>
+        <div class="macro-card" style="padding:8px 10px">
+          <div class="macro-card-label" style="font-size:0.62rem">Λίπος</div>
+          <div class="macro-card-value" style="color:#f59e0b;font-size:1.1rem;margin:2px 0">${doneMacros.f}g</div>
+          <div class="macro-card-sub" style="font-size:0.62rem">${goals.fat}g · −${remaining.f}g</div>
+          ${macroBar(doneMacros.f, goals.fat, '#f59e0b')}
+        </div>
+        <div class="macro-card" style="padding:8px 10px">
+          <div class="macro-card-label" style="font-size:0.62rem">Κατανάλωση</div>
+          <div class="macro-card-value" style="color:#22c55e;font-size:1.1rem;margin:2px 0">${doneMacros.kcal}</div>
+          <div class="macro-card-sub" style="font-size:0.62rem">kcal · ${day.meals.filter(m=>m.done).length}/${day.meals.length} γεύματα</div>
+          ${macroBar(doneMacros.kcal, effectiveKcal, '#22c55e')}
+        </div>
+      </div>
 
       <!-- EXTRA KCAL ΕΚΤΟΣ ΠΛΑΝΟΥ -->
       ${(() => {
@@ -2609,10 +2626,33 @@ function toggleMealDone(mi) {
   renderToday();
 }
 
-function toggleSupp(si) {
-  state.supplements[si].done = !state.supplements[si].done;
+function toggleSupp(id) {
+  if (!state.supplements.done) state.supplements.done = {};
+  state.supplements.done[id] = !state.supplements.done[id];
   saveState();
   renderToday();
+}
+
+function toggleSuppFeature(enabled) {
+  state.supplements.enabled = enabled;
+  saveState();
+  renderSettingsSupplements();
+  renderToday();
+}
+
+function toggleSuppActive(id) {
+  if (!state.supplements.activeIds) state.supplements.activeIds = [];
+  const idx = state.supplements.activeIds.indexOf(id);
+  if (idx === -1) state.supplements.activeIds.push(id);
+  else state.supplements.activeIds.splice(idx, 1);
+  saveState();
+  renderSettingsSupplements();
+  renderToday();
+}
+
+function toggleSuppInfo(id) {
+  const el = document.getElementById('supp-info-' + id);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 function toggleFavorite(rid) {
