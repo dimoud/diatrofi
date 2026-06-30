@@ -53,7 +53,7 @@
 
         <!-- Logo -->
         <div class="auth-logo">
-          <img src="../logo.png" alt="VIVON" class="auth-logo-img"
+          <img src="logo.png" alt="VIVON" class="auth-logo-img"
                onerror="this.style.display='none'">
           <div class="auth-brand">VIVON</div>
           <div class="auth-tagline">Ο σύμμαχός σου για μια <em>καλύτερη διατροφή</em>.</div>

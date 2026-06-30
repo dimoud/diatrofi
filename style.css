@@ -1664,7 +1664,7 @@ select:focus, textarea:focus {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: url('../back.png') center center / cover no-repeat;
+  background: url('back.png') center center / cover no-repeat;
 }
 
 .auth-card {
