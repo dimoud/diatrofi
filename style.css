@@ -267,17 +267,16 @@ h3 { font-size: 0.95rem; }
 
 /* ── SIDE DRAWER ── */
 .drawer-overlay {
-  display: none;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.35);
   z-index: 300;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  transition: opacity 0.28s ease;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
   opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
-.drawer-overlay.open { display: block; opacity: 1; }
+.drawer-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
 
 .drawer {
   position: fixed;
