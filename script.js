@@ -15,6 +15,7 @@ let state = {
   dayTemplates: [],
   activeTab: 'today',
   optimizeMode: 1,
+  bodyLog: [],
 };
 
 // ── LOCALSTORAGE ──
@@ -35,6 +36,38 @@ function loadState() {
       };
     }
   } catch(e) {}
+}
+
+// ── ACTIVITY & DEFICIT CALCULATIONS ──
+function calcStepsKcal(steps, weight) {
+  // ~0.04 kcal ανά βήμα για 70kg, γραμμική κλιμάκωση
+  return Math.round(steps * 0.04 * (weight / 70));
+}
+
+function calcWeightTrainingKcal(weight) {
+  // ~5 kcal/λεπτό για 60 λεπτά, κλιμάκωση βάρους
+  return Math.round(5 * 60 * (weight / 70));
+}
+
+function calcDayActivityKcal(dayIdx) {
+  const day = state.week[dayIdx];
+  const w = state.profile.weight || 80;
+  const stepsCount = (day.stepsCount !== undefined && day.stepsCount !== null) ? day.stepsCount : 8000;
+  const stepsDone = !!day.stepsDone;
+  const stepsKcal = stepsDone ? calcStepsKcal(stepsCount, w) : 0;
+  const trainingKcal = day.weightTraining ? calcWeightTrainingKcal(w) : 0;
+  return { stepsKcal, trainingKcal, totalActivityKcal: stepsKcal + trainingKcal, stepsCount, stepsDone };
+}
+
+function calcDayDeficit(dayIdx) {
+  const day = state.week[dayIdx];
+  const p = state.profile;
+  // Βασικός TDEE μόνο με sedentary factor (1.2) — η υπόλοιπη δραστηριότητα μετριέται via βήματα/προπόνηση
+  const bmr = calcBMR(p);
+  const { stepsKcal, trainingKcal } = calcDayActivityKcal(dayIdx);
+  const totalBurn = bmr + stepsKcal + trainingKcal;
+  const consumed = calcDayMacros(dayIdx, false).kcal + (day.extraKcal || 0);
+  return { totalBurn, consumed, deficit: totalBurn - consumed, stepsKcal, trainingKcal };
 }
 
 // ── COMPUTED MACROS ──
@@ -90,6 +123,251 @@ function calcDayMacros(dayIdx, doneOnly = false) {
   return tot;
 }
 
+// ── BODY MEASUREMENTS ──
+function addBodyMeasurement() {
+  const dateEl = document.getElementById('bm-date');
+  const weightEl = document.getElementById('bm-weight');
+  const fatEl = document.getElementById('bm-fat');
+  const muscleEl = document.getElementById('bm-muscle');
+  if (!dateEl || !weightEl) return;
+  const date = dateEl.value;
+  const weight = parseFloat(weightEl.value);
+  if (!date || isNaN(weight) || weight <= 0) { showToast('⚠️ Βάλε ημερομηνία και βάρος'); return; }
+  const fat = fatEl && fatEl.value !== '' ? parseFloat(fatEl.value) : null;
+  const muscle = muscleEl && muscleEl.value !== '' ? parseFloat(muscleEl.value) : null;
+  if (!state.bodyLog) state.bodyLog = [];
+  // Αντικατάσταση αν ίδια ημερομηνία
+  const existingIdx = state.bodyLog.findIndex(e => e.date === date);
+  const entry = { date, weight, fat, muscle };
+  if (existingIdx >= 0) state.bodyLog[existingIdx] = entry;
+  else state.bodyLog.push(entry);
+  state.bodyLog.sort((a, b) => a.date.localeCompare(b.date));
+  // Ενημέρωση profile.weight με το τελευταίο
+  if (state.bodyLog.length > 0) {
+    const latest = state.bodyLog[state.bodyLog.length - 1];
+    state.profile.weight = latest.weight;
+  }
+  saveState();
+  renderProfile();
+  showToast('✅ Μέτρηση αποθηκεύτηκε!');
+}
+
+function deleteBodyEntry(date) {
+  if (!state.bodyLog) return;
+  state.bodyLog = state.bodyLog.filter(e => e.date !== date);
+  saveState();
+  renderProfile();
+  showToast('🗑 Εγγραφή διαγράφηκε');
+}
+
+function renderBodyChart(log) {
+  if (!log || log.length < 2) return '<div style="font-size:0.78rem;color:var(--text3);text-align:center;padding:16px 0">Χρειάζονται τουλάχιστον 2 μετρήσεις για διάγραμμα</div>';
+
+  const W = 320, H = 130, PAD = { t: 10, r: 10, b: 28, l: 38 };
+  const iW = W - PAD.l - PAD.r, iH = H - PAD.t - PAD.b;
+
+  function linePath(vals, minV, maxV) {
+    const range = maxV - minV || 1;
+    return vals.map((v, i) => {
+      const x = PAD.l + (i / (vals.length - 1)) * iW;
+      const y = PAD.t + iH - ((v - minV) / range) * iH;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+  }
+
+  function dots(vals, minV, maxV, color) {
+    const range = maxV - minV || 1;
+    return vals.map((v, i) => {
+      const x = PAD.l + (i / (vals.length - 1)) * iW;
+      const y = PAD.t + iH - ((v - minV) / range) * iH;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+    }).join('');
+  }
+
+  function yLabels(minV, maxV, color, suffix, offsetX = 0) {
+    const steps = 4;
+    let html = '';
+    for (let i = 0; i <= steps; i++) {
+      const v = minV + ((maxV - minV) / steps) * i;
+      const y = PAD.t + iH - (i / steps) * iH;
+      html += `<text x="${PAD.l - 4 + offsetX}" y="${y.toFixed(1)}" text-anchor="end" font-size="8" fill="${color}" dominant-baseline="middle">${v.toFixed(1)}${suffix}</text>`;
+    }
+    return html;
+  }
+
+  const weights = log.map(e => e.weight);
+  const minW = Math.floor(Math.min(...weights) - 1), maxW = Math.ceil(Math.max(...weights) + 1);
+
+  const hasFat = log.some(e => e.fat !== null && e.fat !== undefined);
+  const hasMuscle = log.some(e => e.muscle !== null && e.muscle !== undefined);
+
+  const xLabels = log.map((e, i) => {
+    if (log.length <= 5 || i === 0 || i === log.length - 1 || i % Math.ceil(log.length / 4) === 0) {
+      const x = PAD.l + (i / (log.length - 1)) * iW;
+      const d = e.date.slice(5); // MM-DD
+      return `<text x="${x.toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="8" fill="#9ca3af">${d}</text>`;
+    }
+    return '';
+  }).join('');
+
+  const weightPath = linePath(weights, minW, maxW);
+  const weightDots = dots(weights, minW, maxW, '#3b82f6');
+  const weightLine = `<path d="${weightPath}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>`;
+
+  let fatLine = '', fatDots = '', fatLabels = '';
+  if (hasFat) {
+    const fats = log.map(e => e.fat ?? null);
+    const validFats = fats.filter(v => v !== null);
+    const minF = Math.floor(Math.min(...validFats) - 1), maxF = Math.ceil(Math.max(...validFats) + 1);
+    const fatVals = fats.map(v => v !== null ? v : null);
+    // Only draw connected segments between non-null
+    const segs = [];
+    let cur = [];
+    fatVals.forEach((v, i) => {
+      if (v !== null) cur.push([i, v]);
+      else if (cur.length > 0) { segs.push(cur); cur = []; }
+    });
+    if (cur.length > 0) segs.push(cur);
+    const range = maxF - minF || 1;
+    segs.forEach(seg => {
+      if (seg.length < 1) return;
+      const d = seg.map(([i, v], si) => {
+        const x = PAD.l + (i / (log.length - 1)) * iW;
+        const y = PAD.t + iH - ((v - minF) / range) * iH;
+        return `${si === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      fatLine += `<path d="${d}" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2" stroke-linejoin="round"/>`;
+      seg.forEach(([i, v]) => {
+        const x = PAD.l + (i / (log.length - 1)) * iW;
+        const y = PAD.t + iH - ((v - minF) / range) * iH;
+        fatDots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#ef4444" stroke="white" stroke-width="1.5"/>`;
+      });
+    });
+    fatLabels = yLabels(minF, maxF, '#ef4444', '%', 0);
+  }
+
+  let muscleLine = '', muscleDots = '', muscleLabels = '';
+  if (hasMuscle) {
+    const muscles = log.map(e => e.muscle ?? null);
+    const validM = muscles.filter(v => v !== null);
+    const minM = Math.floor(Math.min(...validM) - 1), maxM = Math.ceil(Math.max(...validM) + 1);
+    const range = maxM - minM || 1;
+    const segs = [];
+    let cur = [];
+    muscles.forEach((v, i) => {
+      if (v !== null) cur.push([i, v]);
+      else if (cur.length > 0) { segs.push(cur); cur = []; }
+    });
+    if (cur.length > 0) segs.push(cur);
+    segs.forEach(seg => {
+      if (seg.length < 1) return;
+      const d = seg.map(([i, v], si) => {
+        const x = PAD.l + (i / (log.length - 1)) * iW;
+        const y = PAD.t + iH - ((v - minM) / range) * iH;
+        return `${si === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      muscleLine += `<path d="${d}" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="6,2" stroke-linejoin="round"/>`;
+      seg.forEach(([i, v]) => {
+        const x = PAD.l + (i / (log.length - 1)) * iW;
+        const y = PAD.t + iH - ((v - minM) / range) * iH;
+        muscleDots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="#22c55e" stroke="white" stroke-width="1.5"/>`;
+      });
+    });
+    muscleLabels = '';
+  }
+
+  const weightLabels = yLabels(minW, maxW, '#3b82f6', 'kg');
+  const gridLines = [0, 0.25, 0.5, 0.75, 1].map(t => {
+    const y = PAD.t + iH * (1 - t);
+    return `<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W - PAD.r}" y2="${y.toFixed(1)}" stroke="#f1f5f9" stroke-width="1"/>`;
+  }).join('');
+
+  const legendItems = [
+    `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem"><span style="display:inline-block;width:14px;height:2px;background:#3b82f6;border-radius:1px"></span>Βάρος (kg)</span>`,
+    hasFat ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem"><span style="display:inline-block;width:14px;height:2px;background:#ef4444;border-radius:1px"></span>% Λίπος</span>` : '',
+    hasMuscle ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:0.7rem"><span style="display:inline-block;width:14px;height:2px;background:#22c55e;border-radius:1px"></span>Μυϊκή Μάζα (%)</span>` : '',
+  ].filter(Boolean).join('&nbsp;&nbsp;');
+
+  return `<div style="overflow-x:auto">
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%">
+      ${gridLines}
+      ${weightLabels}${fatLabels}${muscleLabels}
+      ${weightLine}${weightDots}
+      ${fatLine}${fatDots}
+      ${muscleLine}${muscleDots}
+      ${xLabels}
+    </svg>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;padding-left:${PAD.l}px">${legendItems}</div>
+  </div>`;
+}
+
+function renderBodyMeasurementsCard() {
+  const log = state.bodyLog || [];
+  const today = new Date().toISOString().split('T')[0];
+  const latest = log.length > 0 ? log[log.length - 1] : null;
+
+  const historyHtml = log.length === 0
+    ? '<div style="font-size:0.78rem;color:var(--text3);text-align:center;padding:12px 0">Δεν υπάρχουν μετρήσεις ακόμα</div>'
+    : [...log].reverse().slice(0, 8).map(e => {
+        const fatStr = e.fat !== null && e.fat !== undefined ? `· 🔴 ${e.fat}% λίπος` : '';
+        const muscleStr = e.muscle !== null && e.muscle !== undefined ? `· 🟢 ${e.muscle}% μυϊκή` : '';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);gap:8px">
+          <div style="font-size:0.72rem;color:var(--text3);min-width:72px">${e.date}</div>
+          <div style="font-size:0.82rem;font-weight:700;flex:1">⚖️ ${e.weight}kg ${fatStr} ${muscleStr}</div>
+          <button onclick="deleteBodyEntry('${e.date}')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:0.75rem;padding:2px 4px">✕</button>
+        </div>`;
+      }).join('');
+
+  const statChips = latest ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="chip" style="background:#eff6ff;color:#3b82f6">⚖️ ${latest.weight}kg</span>
+      ${latest.fat !== null && latest.fat !== undefined ? `<span class="chip" style="background:#fef2f2;color:#ef4444">🔴 ${latest.fat}% λίπος</span>` : ''}
+      ${latest.muscle !== null && latest.muscle !== undefined ? `<span class="chip" style="background:#f0fdf4;color:#16a34a">🟢 ${latest.muscle}% μυϊκή</span>` : ''}
+      <span class="chip" style="background:var(--bg2);color:var(--text3);font-size:0.65rem">${latest.date}</span>
+    </div>` : '';
+
+  return `<div class="card card-lg fade-in">
+    <div class="section-title">📊 Μετρήσεις Σώματος</div>
+    ${statChips}
+
+    <!-- Διάγραμμα -->
+    <div style="margin-bottom:14px">${renderBodyChart(log)}</div>
+
+    <!-- Φόρμα νέας μέτρησης -->
+    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
+      <div style="font-size:0.78rem;font-weight:700;color:var(--text2);margin-bottom:10px">➕ Νέα Μέτρηση</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.72rem">Ημερομηνία</label>
+          <input type="date" id="bm-date" value="${today}"
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.72rem">Βάρος (kg)</label>
+          <input type="number" id="bm-weight" placeholder="π.χ. 95.5" step="0.1" min="30" max="300"
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.72rem">% Λίπους <span style="color:var(--text3)">(προαιρ.)</span></label>
+          <input type="number" id="bm-fat" placeholder="π.χ. 22.5" step="0.1" min="3" max="60"
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.72rem">% Μυϊκής Μάζας <span style="color:var(--text3)">(προαιρ.)</span></label>
+          <input type="number" id="bm-muscle" placeholder="π.χ. 38.0" step="0.1" min="10" max="80"
+            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="addBodyMeasurement()">💾 Αποθήκευση Μέτρησης</button>
+    </div>
+
+    <!-- Ιστορικό -->
+    <div style="font-size:0.75rem;font-weight:700;color:var(--text2);margin-bottom:6px">📋 Ιστορικό (τελευταίες 8)</div>
+    ${historyHtml}
+    ${log.length > 8 ? `<div style="font-size:0.72rem;color:var(--text3);margin-top:6px;text-align:center">+${log.length - 8} παλαιότερες εγγραφές</div>` : ''}
+  </div>`;
+}
+
 // ── PROFILE ──
 function calcBMI(w, h) {
   const hm = h / 100;
@@ -103,18 +381,38 @@ function bmiLabel(bmi) {
   return { label: 'Παχυσαρκία', color: '#ef4444' };
 }
 
+// Mifflin-St Jeor BMR
 function calcBMR(p) {
-  if (p.useCustomBMR && p.customBMR > 0) return p.customBMR;
-  // Harris-Benedict (αναθεωρημένη)
   if (p.gender === 'male') {
-    return Math.round(88.362 + (13.397 * p.weight) + (4.799 * p.height) - (5.677 * p.age));
+    return Math.round(10 * p.weight + 6.25 * p.height - 5 * p.age + 5);
   } else {
-    return Math.round(447.593 + (9.247 * p.weight) + (3.098 * p.height) - (4.330 * p.age));
+    return Math.round(10 * p.weight + 6.25 * p.height - 5 * p.age - 161);
   }
 }
 
+// Προσαρμογή βημάτων (ημερήσιος μέσος όρος)
+function calcStepAdjustment(steps) {
+  const s = steps || 0;
+  if (s < 4000)  return 0;
+  if (s < 6000)  return 80;
+  if (s < 8000)  return 150;
+  if (s < 10000) return 250;
+  if (s < 12000) return 350;
+  return 450;
+}
+
+// Προτεινόμενο TDEE βάσει επιστημονικού μοντέλου
+function calcSuggestedTDEE(p) {
+  const bmr = calcBMR(p);
+  const actMultiplier = p.activity || 1.50;
+  const stepAdj = calcStepAdjustment(p.dailySteps || 0);
+  return Math.round(bmr * actMultiplier + stepAdj);
+}
+
+// Τελικό TDEE — χρησιμοποιεί custom τιμή αν ο χρήστης έχει ορίσει
 function calcTDEE(p) {
-  return Math.round(calcBMR(p) * (p.activity || 1.55));
+  if (p.useCustomTDEE && p.customTDEE > 0) return p.customTDEE;
+  return calcSuggestedTDEE(p);
 }
 
 function calcIdealProtein(w) {
@@ -128,16 +426,17 @@ function renderProfile() {
   const bmi = calcBMI(p.weight, p.height);
   const { label: bmiLbl, color: bmiCol } = bmiLabel(parseFloat(bmi));
   const bmr  = calcBMR(p);
+  const suggestedTDEE = calcSuggestedTDEE(p);
   const tdee = calcTDEE(p);
   const idealProt = calcIdealProtein(p.weight);
   const deficit = tdee - g.kcal;
 
   const activityLabels = {
-    1.2:  'Καθιστική ζωή',
-    1.375:'Ελαφριά δραστηριότητα (1–2x/εβδ.)',
-    1.55: 'Μέτρια δραστηριότητα (3–5x/εβδ.)',
-    1.725:'Έντονη δραστηριότητα (6–7x/εβδ.)',
-    1.9:  'Πολύ έντονη (2x/ημέρα)',
+    1.20: 'Καθιστική ζωή (χωρίς άσκηση)',
+    1.35: 'Ελαφριά (1–2 προπονήσεις/εβδ.)',
+    1.50: 'Μέτρια (3 προπονήσεις/εβδ.)',
+    1.65: 'Έντονη (4–5 προπονήσεις/εβδ.)',
+    1.80: 'Πολύ έντονη (6–7 προπονήσεις/εβδ.)',
   };
 
   // Macro balance quality label
@@ -181,21 +480,21 @@ function renderProfile() {
       <!-- STAT CHIPS: BMI / BMR / TDEE -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px" id="profile-stats-card">
         <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center">
-          <div style="width:44px;height:44px;border-radius:50%;background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 8px">🔥</div>
+          <div style="width:44px;height:44px;border-radius:50%;background:#fff3e0;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 8px">⚖️</div>
           <div style="font-size:1.55rem;font-weight:900;color:${bmiCol};line-height:1">${bmi}</div>
           <div style="font-size:0.68rem;font-weight:700;color:${bmiCol};margin-top:2px">${bmiLbl}</div>
           <div style="font-size:0.6rem;color:var(--text3);margin-top:2px">BMI</div>
         </div>
-        <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center;${p.useCustomBMR?'border-color:#3b82f6;background:#f0f7ff':''}">
+        <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center">
           <div style="width:44px;height:44px;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 8px">〰️</div>
           <div class="bmr-val" style="font-size:1.55rem;font-weight:900;color:#3b82f6;line-height:1">${bmr}</div>
-          <div style="font-size:0.68rem;font-weight:700;color:#3b82f6;margin-top:2px">${p.useCustomBMR?'Μετρημένος':'Εκτιμώμενος'}</div>
+          <div style="font-size:0.68rem;font-weight:700;color:#3b82f6;margin-top:2px">Mifflin-St Jeor</div>
           <div style="font-size:0.6rem;color:var(--text3);margin-top:2px">BMR kcal</div>
         </div>
-        <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center">
+        <div class="card fade-in" style="margin:0;padding:16px 12px;text-align:center;${p.useCustomTDEE?'border-color:#22c55e;background:#f0fdf4':''}">
           <div style="width:44px;height:44px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 8px">🌿</div>
-          <div style="font-size:1.55rem;font-weight:900;color:var(--green-d);line-height:1">${tdee}</div>
-          <div style="font-size:0.68rem;font-weight:700;color:var(--green-d);margin-top:2px">Συντήρηση</div>
+          <div class="tdee-val" style="font-size:1.55rem;font-weight:900;color:var(--green-d);line-height:1">${tdee}</div>
+          <div style="font-size:0.68rem;font-weight:700;color:var(--green-d);margin-top:2px">${p.useCustomTDEE?'Χειροκίνητο':'Υπολογισμένο'}</div>
           <div style="font-size:0.6rem;color:var(--text3);margin-top:2px">TDEE kcal</div>
         </div>
       </div>
@@ -223,7 +522,7 @@ function renderProfile() {
               oninput="liveUpdateProfile()">
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
           <div class="form-group" style="margin:0">
             <label style="font-size:0.75rem">Φύλο</label>
             <select id="prof-gender" style="width:100%;padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:0.9rem;background:var(--bg2)" onchange="liveUpdateProfile()">
@@ -232,7 +531,7 @@ function renderProfile() {
             </select>
           </div>
           <div class="form-group" style="margin:0">
-            <label style="font-size:0.75rem">Επίπεδο Δραστηριότητας</label>
+            <label style="font-size:0.75rem">Επίπεδο Δραστηριότητας (προπονήσεις)</label>
             <select id="prof-activity" style="width:100%;padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:0.82rem;background:var(--bg2)" onchange="liveUpdateProfile()">
               ${Object.entries(activityLabels).map(([val, lbl]) =>
                 `<option value="${val}" ${parseFloat(p.activity)===parseFloat(val)?'selected':''}>${lbl}</option>`
@@ -240,27 +539,65 @@ function renderProfile() {
             </select>
           </div>
         </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.75rem">👣 Μέσα Βήματα / Ημέρα</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" id="prof-steps" min="0" max="20000" step="500" value="${p.dailySteps||0}"
+              style="flex:1" oninput="liveUpdateProfile();document.getElementById('prof-steps-val').textContent=this.value">
+            <span id="prof-steps-val" style="font-size:0.95rem;font-weight:800;color:var(--text);min-width:52px;text-align:right">${p.dailySteps||0}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text3);margin-top:2px">
+            <span>0</span><span>4k</span><span>6k</span><span>8k</span><span>10k</span><span>12k</span><span>20k</span>
+          </div>
+        </div>
       </div>
 
-      <!-- CUSTOM BMR -->
+      <!-- ΘΕΡΜΙΔΕΣ ΣΥΝΤΗΡΗΣΗΣ (TDEE) -->
       <div class="card card-lg fade-in">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${p.useCustomBMR?'12px':'0'}">
+        <div class="section-title">🌿 Θερμίδες Συντήρησης (TDEE)</div>
+
+        <!-- Προτεινόμενο TDEE breakdown -->
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px">
+          <div style="font-size:0.72rem;font-weight:700;color:var(--text2);margin-bottom:8px">🔢 Αυτόματος Υπολογισμός</div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:4px">
+            <span>BMR (Mifflin-St Jeor)</span><strong>${bmr} kcal</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:4px">
+            <span>× Συντελεστής δραστηριότητας (${parseFloat(p.activity||1.50).toFixed(2)})</span>
+            <strong>${Math.round(bmr * (p.activity||1.50))} kcal</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text2);margin-bottom:8px">
+            <span>+ Διόρθωση βημάτων (${(p.dailySteps||0).toLocaleString()} βήμ/ημ)</span>
+            <strong>+${calcStepAdjustment(p.dailySteps||0)} kcal</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:1rem;font-weight:900;color:var(--green-d);border-top:1.5px solid var(--border);padding-top:8px">
+            <span>= Προτεινόμενο TDEE</span><span>${suggestedTDEE} kcal</span>
+          </div>
+        </div>
+
+        <!-- Toggle χειροκίνητης τιμής -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${p.useCustomTDEE?'12px':'0'}">
           <div>
-            <div style="font-size:0.9rem;font-weight:700">Μετρημένος BMR</div>
-            <div style="font-size:0.72rem;color:var(--text3)">Από μέτρηση (π.χ. InBody)</div>
+            <div style="font-size:0.9rem;font-weight:700">Χειροκίνητη Τιμή TDEE</div>
+            <div style="font-size:0.72rem;color:var(--text3)">Παράκαμψη αυτόματου υπολογισμού</div>
           </div>
           <label class="toggle-switch">
-            <input type="checkbox" id="prof-use-bmr" ${p.useCustomBMR?'checked':''} onchange="toggleCustomBMR(this.checked)">
+            <input type="checkbox" id="prof-use-custom-tdee" ${p.useCustomTDEE?'checked':''} onchange="toggleCustomTDEE(this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        ${p.useCustomBMR ? `
-        <div style="display:flex;align-items:center;gap:8px">
-          <input type="number" id="prof-custom-bmr" value="${p.customBMR||2100}" min="800" max="5000" step="10"
-            style="flex:1;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius-sm);font-size:1rem;font-weight:700;text-align:center;background:#f0f7ff"
-            oninput="updateCustomBMR(this.value)">
+        ${p.useCustomTDEE ? `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <input type="number" id="prof-custom-tdee" value="${p.customTDEE||suggestedTDEE}" min="1000" max="7000" step="50"
+            style="flex:1;padding:10px 12px;border:2px solid var(--green);border-radius:var(--radius-sm);font-size:1rem;font-weight:700;text-align:center;background:#f0fdf4"
+            oninput="updateCustomTDEE(this.value)">
           <span style="font-size:0.82rem;color:var(--text2);white-space:nowrap">kcal/ημέρα</span>
-        </div>` : ''}
+        </div>
+        <button class="btn btn-ghost btn-sm" style="font-size:0.72rem" onclick="resetToSuggestedTDEE()">↺ Επιστροφή σε αυτόματο (${suggestedTDEE} kcal)</button>
+        ` : `
+        <div style="margin-top:10px;font-size:0.78rem;color:var(--text3)">
+          Ενεργό TDEE: <strong style="color:var(--green-d)">${suggestedTDEE} kcal/ημέρα</strong>
+        </div>`}
       </div>
 
       <!-- ΗΜΕΡΗΣΙΟΙ ΣΤΟΧΟΙ -->
@@ -272,7 +609,7 @@ function renderProfile() {
             <span style="display:flex;align-items:center;gap:6px">🔥 <span>Θερμίδες</span></span>
             <strong id="prof-kcal-val" style="color:var(--amber)">${g.kcal} kcal</strong>
           </div>
-          <input type="range" id="prof-kcal" min="1200" max="3500" step="50" value="${g.kcal}"
+          <input type="range" id="prof-kcal" min="1000" max="3500" step="50" value="${g.kcal}"
             class="prof-range-amber"
             oninput="updateGoalFromProfile('kcal',this.value)" style="width:100%">
           <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--text3);margin-top:3px">
@@ -347,6 +684,9 @@ function renderProfile() {
         </div>` : ''}
       </div>
 
+      <!-- ΜΕΤΡΗΣΕΙΣ ΣΩΜΑΤΟΣ -->
+      ${renderBodyMeasurementsCard()}
+
       <!-- ΕΚΤΥΠΩΣΗ & ΣΥΝΟΨΗ -->
       <div class="card card-lg fade-in">
         <div class="section-title">🖨️ Εκτύπωση &amp; Σύνοψη</div>
@@ -374,16 +714,23 @@ function liveUpdateName(val) {
 
 function liveUpdateProfile() {
   const p = state.profile;
-  const wEl = document.getElementById('prof-weight');
-  const hEl = document.getElementById('prof-height');
-  const aEl = document.getElementById('prof-age');
-  const gEl = document.getElementById('prof-gender');
+  const wEl  = document.getElementById('prof-weight');
+  const hEl  = document.getElementById('prof-height');
+  const aEl  = document.getElementById('prof-age');
+  const gEl  = document.getElementById('prof-gender');
   const acEl = document.getElementById('prof-activity');
-  if (wEl) p.weight   = parseFloat(wEl.value)  || p.weight;
-  if (hEl) p.height   = parseFloat(hEl.value)  || p.height;
-  if (aEl) p.age      = parseInt(aEl.value)     || p.age;
-  if (gEl) p.gender   = gEl.value;
-  if (acEl) p.activity = parseFloat(acEl.value);
+  const stEl = document.getElementById('prof-steps');
+  if (wEl)  p.weight     = parseFloat(wEl.value)  || p.weight;
+  if (hEl)  p.height     = parseFloat(hEl.value)  || p.height;
+  if (aEl)  p.age        = parseInt(aEl.value)     || p.age;
+  if (gEl)  p.gender     = gEl.value;
+  if (acEl) p.activity   = parseFloat(acEl.value);
+  if (stEl) p.dailySteps = parseInt(stEl.value)    || 0;
+
+  // Αν ο χρήστης ΔΕΝ έχει ορίσει custom TDEE, καθαρίζουμε το customTDEE
+  // ώστε η αυτόματη τιμή να ενημερώνεται με κάθε αλλαγή βάρους
+  if (!p.useCustomTDEE) p.customTDEE = 0;
+
   saveState();
   renderProfile();
 }
@@ -398,23 +745,33 @@ function updateGoalFromProfile(key, val) {
   saveState();
 }
 
-function toggleCustomBMR(val) {
-  state.profile.useCustomBMR = val;
+function toggleCustomTDEE(val) {
+  state.profile.useCustomTDEE = val;
+  if (val && (!state.profile.customTDEE || state.profile.customTDEE === 0)) {
+    // Προ-συμπλήρωση με την προτεινόμενη τιμή
+    state.profile.customTDEE = calcSuggestedTDEE(state.profile);
+  }
+  if (!val) state.profile.customTDEE = 0;
   saveState();
   renderProfile();
 }
 
-function updateCustomBMR(val) {
+function updateCustomTDEE(val) {
   const v = parseInt(val);
-  if (v > 500) {
-    state.profile.customBMR = v;
+  if (v >= 1000) {
+    state.profile.customTDEE = v;
     saveState();
-    // Live update BMR/TDEE display
-    const bmr  = calcBMR(state.profile);
-    const tdee = calcTDEE(state.profile);
-    const bmrEl = document.querySelector('#profile-stats-card .bmr-val');
-    if (bmrEl) bmrEl.textContent = bmr;
+    const tdeeEl = document.querySelector('#profile-stats-card .tdee-val');
+    if (tdeeEl) tdeeEl.textContent = v;
   }
+}
+
+function resetToSuggestedTDEE() {
+  state.profile.useCustomTDEE = false;
+  state.profile.customTDEE = 0;
+  saveState();
+  renderProfile();
+  showToast('↺ Επιστροφή σε αυτόματο TDEE');
 }
 
 function applyTDEEGoal() {
@@ -473,6 +830,25 @@ function setPlanStartDate(dateStr) {
   saveState();
   renderProfile();
   showToast('📅 Έναρξη πλάνου αποθηκεύτηκε');
+}
+
+function saveDayStepsCount(val) {
+  const v = parseInt(val);
+  state.week[state.currentDay].stepsCount = isNaN(v) ? 8000 : Math.max(0, v);
+  saveState();
+  renderToday();
+}
+
+function saveDayStepsDone(checked) {
+  state.week[state.currentDay].stepsDone = !!checked;
+  saveState();
+  renderToday();
+}
+
+function saveDayTraining(checked) {
+  state.week[state.currentDay].weightTraining = !!checked;
+  saveState();
+  renderToday();
 }
 
 function saveDayKcalGoal(val) {
@@ -669,6 +1045,51 @@ function renderToday() {
         </div>
       </div>
 
+      <!-- Activity & Deficit -->
+      ${(() => {
+        const hasTraining = !!day.weightTraining;
+        const { stepsKcal, trainingKcal, totalActivityKcal, stepsCount, stepsDone } = calcDayActivityKcal(state.currentDay);
+        const { totalBurn, consumed, deficit } = calcDayDeficit(state.currentDay);
+        const deficitColor = deficit >= 0 ? '#22c55e' : '#ef4444';
+        const deficitLabel = deficit >= 0 ? `−${deficit} kcal έλλειμμα` : `+${Math.abs(deficit)} kcal πλεόνασμα`;
+        return `<div class="card card-sm fade-in" style="margin-bottom:10px">
+          <div class="section-title" style="margin-bottom:10px">🏃 Δραστηριότητα & Έλλειμμα</div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span style="font-size:0.82rem;color:var(--text2);white-space:nowrap">👣 Βήματα:</span>
+                <label class="toggle-switch" style="flex-shrink:0">
+                  <input type="checkbox" ${stepsDone ? 'checked' : ''} onchange="saveDayStepsDone(this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:0.82rem;font-weight:700;color:var(--text1)">${stepsCount.toLocaleString()}</span>
+                ${stepsDone ? `<span style="font-size:0.72rem;color:var(--text3)">~${stepsKcal} kcal</span>` : '<span style="font-size:0.7rem;color:var(--text3)">δεν έγιναν</span>'}
+              </div>
+              <input type="range" min="1000" max="20000" step="500" value="${stepsCount}"
+                style="width:100%;accent-color:var(--primary)"
+                oninput="saveDayStepsCount(this.value)">
+              <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text3);margin-top:1px">
+                <span>1k</span><span>5k</span><span>8k</span><span>10k</span><span>15k</span><span>20k</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:0.82rem;color:var(--text2);white-space:nowrap">🏋️ Προπόνηση βαρών (1h):</span>
+              <label class="toggle-switch" style="flex-shrink:0">
+                <input type="checkbox" ${hasTraining ? 'checked' : ''} onchange="saveDayTraining(this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              ${hasTraining ? `<span style="font-size:0.72rem;color:var(--text3)">~${trainingKcal} kcal</span>` : ''}
+            </div>
+          </div>
+          <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <div style="font-size:0.78rem;color:var(--text2)">
+              🔥 Καύση: <strong>${totalBurn} kcal</strong> &nbsp;·&nbsp; 🍽️ Κατανάλωση: <strong>${consumed} kcal</strong>
+            </div>
+            <div style="font-size:1rem;font-weight:900;color:${deficitColor}">${deficitLabel}</div>
+          </div>
+        </div>`;
+      })()}
+
       <!-- Macros Dashboard -->
       <div class="dashboard-grid fade-in">
         <div class="macro-card">
@@ -776,7 +1197,6 @@ function renderToday() {
         ${state.supplements.map((s,si) => `
           <div class="supp-item">
             <button class="supp-check ${s.done?'checked':''}" onclick="toggleSupp(${si})">${s.done?'✓':''}</button>
-            <span class="supp-time">${s.time}</span>
             <div class="supp-info">
               <div class="supp-name">${s.name}</div>
               <div class="supp-note">${s.note}</div>
@@ -945,6 +1365,13 @@ function renderWeek() {
         ${mealSections || '<div style="font-size:0.65rem;color:var(--text3);text-align:center;padding:12px 0">Κανένα γεύμα</div>'}
         ${allDone ? `<div style="margin-top:6px;text-align:center"><span style="font-size:0.62rem;color:#22c55e;font-weight:700;background:#dcfce7;border-radius:20px;padding:2px 8px">✓ Ολοκληρώθηκε</span></div>` : ''}
         ${extraKcal > 0 ? `<div style="margin-top:4px;font-size:0.62rem;color:#ef4444;font-weight:700;text-align:center">⚠️ +${extraKcal} kcal εκτός</div>` : ''}
+        ${(() => {
+          const { deficit } = calcDayDeficit(di);
+          const dc = deficit >= 0 ? '#22c55e' : '#ef4444';
+          const sc = (day.stepsCount !== undefined && day.stepsCount !== null) ? day.stepsCount : 8000;
+          return `<div style="margin-top:5px;font-size:0.6rem;text-align:center;color:${dc};font-weight:700">${deficit >= 0 ? '−' : '+'}${Math.abs(deficit)} kcal ${deficit >= 0 ? 'έλλ.' : 'πλεόν.'}</div>
+          <div style="font-size:0.55rem;color:var(--text3);text-align:center">${day.stepsDone ? `👣${(sc/1000).toFixed(1)}k` : ''}${day.weightTraining?' 🏋️':''}</div>`;
+        })()}
       </div>
     </div>`;
   }).join('');
@@ -1006,6 +1433,48 @@ function renderWeek() {
         </div>
       </div>
 
+      <!-- Weekly Deficit Summary -->
+      ${(() => {
+        let weeklyDeficit = 0, weeklyBurn = 0, weeklyConsumed = 0;
+        const dayDeficits = state.week.map((d, di) => {
+          const { totalBurn, consumed, deficit } = calcDayDeficit(di);
+          weeklyDeficit += deficit;
+          weeklyBurn += totalBurn;
+          weeklyConsumed += consumed;
+          const { stepsKcal, trainingKcal, stepsCount, stepsDone } = calcDayActivityKcal(di);
+          return { deficit, stepsCount, stepsDone, hasTraining: !!d.weightTraining, stepsKcal, trainingKcal };
+        });
+        const deficitColor = weeklyDeficit >= 0 ? '#22c55e' : '#ef4444';
+        const kgEquiv = (weeklyDeficit / 7700).toFixed(2);
+        const kgColor = parseFloat(kgEquiv) >= 0 ? '#22c55e' : '#ef4444';
+        const dayNames7 = ['Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ','Κυρ'];
+        const barCells = dayDeficits.map((dd, i) => {
+          const dColor = dd.deficit >= 0 ? '#22c55e' : '#ef4444';
+          return `<div style="text-align:center;flex:1">
+            <div style="font-size:0.6rem;color:var(--text3);margin-bottom:3px">${dayNames7[i]}</div>
+            <div style="font-size:0.7rem;font-weight:800;color:${dColor}">${dd.deficit >= 0 ? '-' : '+'}${Math.abs(dd.deficit)}</div>
+            <div style="font-size:0.55rem;color:var(--text3)">${dd.stepsDone ? `👣${(dd.stepsCount/1000).toFixed(1)}k` : ''}${dd.hasTraining ? ' 🏋️' : ''}</div>
+          </div>`;
+        }).join('');
+        return `<div style="padding:0 16px;margin-bottom:10px">
+          <div style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
+            <div style="font-size:0.75rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">🏃 Εβδομαδιαία Δραστηριότητα & Έλλειμμα</div>
+            <div style="display:flex;gap:0;margin-bottom:14px">${barCells}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div style="font-size:0.78rem;color:var(--text2)">
+                🔥 Συνολική καύση: <strong>${weeklyBurn.toLocaleString()} kcal</strong><br>
+                🍽️ Συνολική κατανάλωση: <strong>${weeklyConsumed.toLocaleString()} kcal</strong>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:1.3rem;font-weight:900;color:${deficitColor}">${weeklyDeficit >= 0 ? '−' : '+'}${Math.abs(weeklyDeficit).toLocaleString()} kcal</div>
+                <div style="font-size:0.72rem;color:${kgColor};font-weight:700">≈ ${parseFloat(kgEquiv) >= 0 ? '-' : '+'}${Math.abs(parseFloat(kgEquiv))} kg εκτιμ.</div>
+                <div style="font-size:0.62rem;color:var(--text3)">εβδομαδιαίο ${weeklyDeficit >= 0 ? 'έλλειμμα' : 'πλεόνασμα'}</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      })()}
+
       <!-- Footer stats -->
       <div style="padding:0 16px">
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
@@ -1024,8 +1493,8 @@ function renderWeek() {
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">💧</div>
             <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">Ενυδάτωση</div>
-            <div style="font-size:1rem;font-weight:900;color:var(--text)">${(goalKcal * 0.033).toFixed(1)}L νερό</div>
-            <div style="font-size:0.65rem;color:var(--text3)">Στόχος: ${Math.round(goalKcal * 0.033)}ml/ημέρα</div>
+            <div style="font-size:1rem;font-weight:900;color:var(--text)">${(state.profile.weight * 0.035).toFixed(1)}L νερό</div>
+            <div style="font-size:0.65rem;color:var(--text3)">Στόχος: ${Math.round(state.profile.weight * 35)}ml/ημέρα</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">🎯</div>
@@ -1148,7 +1617,7 @@ function renderOptimize() {
         <div class="section-title">🎯 Ημερήσιοι Στόχοι</div>
         <div class="slider-row">
           <div class="slider-label"><span>🔥 Θερμίδες</span><strong id="sl-kcal-val">${g.kcal} kcal</strong></div>
-          <input type="range" id="sl-kcal" min="1200" max="3500" step="50" value="${g.kcal}" oninput="updateGoal('kcal',this.value)">
+          <input type="range" id="sl-kcal" min="1000" max="3500" step="50" value="${g.kcal}" oninput="updateGoal('kcal',this.value)">
         </div>
         <div class="slider-row">
           <div class="slider-label"><span>🥩 Πρωτεΐνη</span><strong id="sl-prot-val">${g.protein}g</strong></div>
@@ -2617,8 +3086,8 @@ function exportPDF() {
         <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:8px 10px;text-align:center">
           <div style="font-size:14px;margin-bottom:2px">💧</div>
           <div style="font-size:7.5px;color:#9ca3af;margin-bottom:2px">Ενυδάτωση</div>
-          <div style="font-size:11px;font-weight:900;color:#111">${(g.kcal * 0.033).toFixed(1)}L νερό</div>
-          <div style="font-size:7px;color:#9ca3af">Στόχος: ${Math.round(g.kcal * 0.033)}ml/ημέρα</div>
+          <div style="font-size:11px;font-weight:900;color:#111">${(state.profile.weight * 0.035).toFixed(1)}L νερό</div>
+          <div style="font-size:7px;color:#9ca3af">Στόχος: ${Math.round(state.profile.weight * 35)}ml/ημέρα</div>
         </div>
         <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:8px 10px;text-align:center">
           <div style="font-size:14px;margin-bottom:2px">🎯</div>
@@ -2787,4 +3256,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   navigateTo(state.activeTab || 'today');
+
+  // Κρύψιμο top nav (+ VIVON μέσα) με scroll-down
+  let lastScrollY = window.scrollY;
+  const topNav = document.querySelector('.top-nav');
+  window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    if (currentScrollY > lastScrollY && currentScrollY > 10) {
+      topNav && topNav.classList.add('hidden');
+    } else {
+      topNav && topNav.classList.remove('hidden');
+    }
+    lastScrollY = currentScrollY;
+  }, { passive: true });
 });

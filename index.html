@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#e8eaed">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Vivon 🥗</title>
+  <title>VIVON</title>
   <link rel="stylesheet" href="style.css">
   <style>
     @media print {
@@ -23,58 +23,107 @@
 </head>
 <body>
 
-  <!-- TOP NAV -->
-  <nav class="top-nav">
-    <div class="top-nav-inner">
-      <div class="app-title" id="top-app-title">🥗 Vivon</div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="exportPDF()">🖨️ PDF</button>
-        <button class="btn btn-ghost btn-sm" onclick="navigateTo('optimize')">⚡</button>
+  <!-- APP SHELL -->
+  <div class="app-shell">
+
+    <!-- SIDEBAR (desktop) -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <img src="../logo.png" alt="VIVON" class="sidebar-logo-img">
       </div>
-    </div>
-  </nav>
+      <div class="sidebar-nav">
+        <button class="sidebar-item active" data-tab="today">
+          <span class="sidebar-icon">🏠</span>
+          <span class="sidebar-label">Ημερήσιο</span>
+        </button>
+        <button class="sidebar-item" data-tab="week">
+          <span class="sidebar-icon">📅</span>
+          <span class="sidebar-label">Εβδομαδιαίο</span>
+        </button>
+        <button class="sidebar-item" data-tab="ideas">
+          <span class="sidebar-icon">💡</span>
+          <span class="sidebar-label">Ιδέες</span>
+        </button>
+        <button class="sidebar-item" data-tab="builder">
+          <span class="sidebar-icon">🏗️</span>
+          <span class="sidebar-label">Σχεδιαστής</span>
+        </button>
+        <button class="sidebar-item" data-tab="stats">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-label">Στατιστικά</span>
+        </button>
+        <button class="sidebar-item" data-tab="settings">
+          <span class="sidebar-icon">⚙️</span>
+          <span class="sidebar-label">Ρυθμίσεις</span>
+        </button>
+      </div>
+      <div class="sidebar-footer">
+        <button class="btn btn-ghost btn-sm" onclick="exportPDF()" style="width:100%">🖨️ PDF</button>
+      </div>
+    </nav>
 
-  <!-- PAGES -->
-  <main>
-    <div id="page-profile"  class="page"></div>
-    <div id="page-today"    class="page active"></div>
-    <div id="page-week"     class="page"></div>
-    <div id="page-recipes"  class="page"></div>
-    <div id="page-foods"    class="page"></div>
-    <div id="page-optimize" class="page"></div>
-    <div id="page-builder"  class="page"></div>
-  </main>
+    <!-- MAIN CONTENT -->
+    <div class="app-content">
 
-  <!-- PRINT VIEW (generated at print time) -->
-  <div id="print-view"></div>
+      <!-- TOP BAR (mobile only) -->
+      <nav class="top-nav" id="top-nav">
+        <div class="top-nav-inner">
+          <div class="app-title" id="top-app-title"><img src="../logo.png" alt="VIVON" style="height:36px;vertical-align:middle;"></div>
+          <div id="hero-title">VIVON</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="exportPDF()">🖨️ PDF</button>
+          </div>
+        </div>
+      </nav>
 
-  <!-- BOTTOM TAB BAR -->
-  <nav class="bottom-bar">
-    <button class="tab-item" data-tab="profile">
-      <span class="tab-icon">👤</span>
-      Προφίλ
-    </button>
-    <button class="tab-item active" data-tab="today">
-      <span class="tab-icon">🏠</span>
-      Σήμερα
-    </button>
-    <button class="tab-item" data-tab="week">
-      <span class="tab-icon">📅</span>
-      Εβδομάδα
-    </button>
-    <button class="tab-item" data-tab="recipes">
-      <span class="tab-icon">📖</span>
-      Συνταγές
-    </button>
-    <button class="tab-item" data-tab="builder">
-      <span class="tab-icon">🏗️</span>
-      Σχεδιαστής
-    </button>
-    <button class="tab-item" data-tab="optimize">
-      <span class="tab-icon">⚡</span>
-      Βελτίωση
-    </button>
-  </nav>
+      <!-- PAGES -->
+      <main>
+        <div id="page-today"    class="page active"></div>
+        <div id="page-week"     class="page"></div>
+        <div id="page-ideas"    class="page"></div>
+        <div id="page-builder"  class="page"></div>
+        <div id="page-stats"    class="page"></div>
+        <div id="page-settings" class="page"></div>
+        <!-- legacy pages kept for internal renders -->
+        <div id="page-profile"  class="page" style="display:none"></div>
+        <div id="page-recipes"  class="page" style="display:none"></div>
+        <div id="page-foods"    class="page" style="display:none"></div>
+        <div id="page-optimize" class="page" style="display:none"></div>
+      </main>
+
+      <!-- PRINT VIEW (generated at print time) -->
+      <div id="print-view"></div>
+
+      <!-- BOTTOM TAB BAR (mobile only) -->
+      <nav class="bottom-bar">
+        <button class="tab-item active" data-tab="today">
+          <span class="tab-icon">🏠</span>
+          Ημερήσιο
+        </button>
+        <button class="tab-item" data-tab="week">
+          <span class="tab-icon">📅</span>
+          Εβδομάδα
+        </button>
+        <button class="tab-item" data-tab="ideas">
+          <span class="tab-icon">💡</span>
+          Ιδέες
+        </button>
+        <button class="tab-item" data-tab="builder">
+          <span class="tab-icon">🏗️</span>
+          Σχεδιαστής
+        </button>
+        <button class="tab-item" data-tab="stats">
+          <span class="tab-icon">📊</span>
+          Στατιστικά
+        </button>
+        <button class="tab-item" data-tab="settings">
+          <span class="tab-icon">⚙️</span>
+          Ρυθμίσεις
+        </button>
+      </nav>
+
+    </div><!-- /app-content -->
+  </div><!-- /app-shell -->
 
   <!-- MODAL -->
   <div id="modal-overlay" class="modal-overlay">

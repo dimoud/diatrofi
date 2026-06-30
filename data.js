@@ -55,9 +55,10 @@ const DEFAULT_PROFILE = {
   height: 188,
   age: 34,
   gender: 'male',
-  activity: 1.55,
-  customBMR: 2100,   // μετρημένος BMR — παρακάμπτει τον υπολογισμό
-  useCustomBMR: true,
+  activity: 1.50,    // Mifflin-St Jeor multipliers: 1.20/1.35/1.50/1.65/1.80
+  dailySteps: 8000,  // μέσος αριθμός βημάτων/ημέρα για TDEE
+  useCustomTDEE: false,  // αν true, χρησιμοποιεί customTDEE αντί υπολογισμού
+  customTDEE: 0,         // χειροκίνητα εισαγμένο TDEE (0 = αχρησιμοποίητο)
 };
 
 const FOODS_DB = [
@@ -974,10 +975,11 @@ const STANDARD_MEALS = [
 // SUPPLEMENTS — Ημερήσια συμπληρώματα & ρουτίνα
 // ============================================================
 const SUPPLEMENTS_DEFAULT = [
-  { name: "Βιταμίνη D3 2000IU",    time: "08:00", note: "Με πρωινό (λιπαρό γεύμα)", qty: "1 κάψουλα", done: false },
-  { name: "Ωμέγα-3 (EPA+DHA)",     time: "08:00", note: "Με πρωινό",                 qty: "2g",        done: false },
-  { name: "Μαγνήσιο Bisglycinate", time: "21:00", note: "Βράδυ — χαλάρωση",          qty: "300mg",     done: false },
-  { name: "Ψευδάργυρος (Zinc)",    time: "21:00", note: "Μακριά από ασβέστιο",       qty: "15mg",      done: false },
-  { name: "Whey Isolate",           time: "16:00", note: "Post-workout ή Απογευματινό", qty: "30g",     done: false },
-  { name: "Κρεατίνη Monohydrate",  time: "08:00", note: "Καθημερινά — οποτεδήποτε", qty: "5g",        done: false },
+  { name: "Lipodrene 🌿",           note: "Με άδειο στομάχι ή με τον καφέ",            qty: "",          done: false },
+  { name: "Benetdea Vitta 💊",      note: "Με τον καφέ ή αμέσως μετά",                 qty: "",          done: false },
+  { name: "Βιταμίνη D3 ☀️",        note: "Με λιπαρό γεύμα — καλύτερη απορρόφηση",    qty: "",          done: false },
+  { name: "Κρεατίνη 💪",           note: "Με μεσημεριανό ή post-workout",              qty: "9g",        done: false },
+  { name: "Whey Isolate 🥛",        note: "Απογευματινό σνακ — πάντα",                 qty: "1 σκούπ",   done: false },
+  { name: "Μαγνήσιο 🧲",           note: "Πριν ύπνο — μυϊκή αποκατάσταση",           qty: "300–400mg", done: false },
+  { name: "Ψευδάργυρος ⚡",         note: "Μαζί με μαγνήσιο — μακριά από ασβέστιο",   qty: "15–25mg",   done: false },
 ];
