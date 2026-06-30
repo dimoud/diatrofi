@@ -2240,7 +2240,21 @@ function renderWeek() {
 }
 
 function resetWeekPlan() {
-  if (!confirm('Επαναφορά ολόκληρου του εβδομαδιαίου πλάνου στις προεπιλογές;\n\nΌλες οι αλλαγές θα χαθούν.')) return;
+  openModal(`
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔄 Επαναφορά πλάνου</div>
+    <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin-bottom:20px">
+      Θέλεις σίγουρα να επαναφέρεις <strong>ολόκληρο</strong> το εβδομαδιαίο πλάνο στις προεπιλογές;<br>
+      <span style="color:#ef4444;font-weight:700">Όλες οι αλλαγές θα χαθούν.</span>
+    </p>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeModal()" class="btn btn-ghost" style="flex:1">Άκυρο</button>
+      <button onclick="confirmResetWeekPlan()" class="btn" style="flex:1;background:#ef4444;color:#fff;border:none">Επαναφορά</button>
+    </div>
+  `);
+}
+function confirmResetWeekPlan() {
+  closeModal();
   state.week = JSON.parse(JSON.stringify(DEFAULT_WEEK));
   saveState();
   renderWeek();
