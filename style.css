@@ -1302,6 +1302,66 @@ select { cursor: pointer; }
 }
 .seg-btn.active { background: var(--card); color: var(--green-d); box-shadow: var(--shadow); }
 
+/* ── SETTINGS ICON TABS ── */
+.settings-icon-tabs {
+  display: flex;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 8px;
+  margin-bottom: 18px;
+  gap: 4px;
+  box-shadow: var(--shadow);
+}
+.sit-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text3);
+  transition: all var(--transition);
+  position: relative;
+}
+.sit-btn.active {
+  background: var(--green-bg, #edf7f0);
+  color: var(--green-d);
+}
+.sit-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  transition: all var(--transition);
+}
+.sit-btn.active .sit-icon {
+  background: transparent;
+}
+.sit-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+.sit-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 2.5px;
+  background: var(--green-d);
+  border-radius: 2px;
+}
+
 /* ── CHIP TAGS ── */
 .chip {
   display: inline-flex; align-items: center; gap: 4px;

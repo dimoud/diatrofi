@@ -250,11 +250,10 @@ function calcRecipeMacros(recipe, scaleFactor = 1) {
     if (food.unit === 'τεμ') {
       // ανά τεμάχιο (αυγό, ριζογκοφρέτα κ.λπ.) — per100 είναι ανά τεμάχιο
       divisor = 1;
-    } else if (food.unit === 'ψεκ') {
-      // ψεκασμός ελαιόλαδου: 1 ψεκ = 0.25ml ≈ 0.23g · per100 βάσει ml
-      // qty ψεκ → qty * 0.25ml → /100 * per100
-      const mlPerSpray = food.sprayFactor || 0.25;
-      const ml = qty * mlPerSpray;
+    } else if (food.unit === 'κ.γ.' || food.unit === 'κ.σ.') {
+      // κ.γ. = κουταλάκι γλυκού (5ml) · κ.σ. = κουταλιά σούπας (10ml)
+      const mlPerUnit = food.unit === 'κ.σ.' ? 10 : (food.sprayFactor || 5);
+      const ml = qty * mlPerUnit;
       kcal += food.per100.kcal * ml / 100;
       p    += food.per100.p    * ml / 100;
       c    += food.per100.c    * ml / 100;
@@ -4691,11 +4690,23 @@ function renderSettingsPage() {
   if (!el) return;
   el.innerHTML = `
     <div class="container fade-in" style="padding-top:14px">
-      <div class="segment" style="margin-top:0;flex-wrap:wrap;gap:4px">
-        <button class="seg-btn active" id="settings-tab-profile" onclick="showSettingsTab('profile')">${t('settings_profile')}</button>
-        <button class="seg-btn" id="settings-tab-supplements" onclick="showSettingsTab('supplements')">${t('settings_supplements')}</button>
-        <button class="seg-btn" id="settings-tab-language" onclick="showSettingsTab('language')">${t('settings_language')}</button>
-        <button class="seg-btn" id="settings-tab-feedback" onclick="showSettingsTab('feedback')">${t('settings_feedback')}</button>
+      <div class="settings-icon-tabs">
+        <button class="sit-btn active" id="settings-tab-profile" onclick="showSettingsTab('profile')">
+          <span class="sit-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
+          <span class="sit-label">${t('settings_profile')}</span>
+        </button>
+        <button class="sit-btn" id="settings-tab-supplements" onclick="showSettingsTab('supplements')">
+          <span class="sit-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 2.5 A4 7 -45 0 1 13.5 21.5 M13.5 2.5 A4 7 45 0 1 10.5 21.5"/><line x1="7" y1="12" x2="17" y2="12"/></svg></span>
+          <span class="sit-label">${t('settings_supplements')}</span>
+        </button>
+        <button class="sit-btn" id="settings-tab-language" onclick="showSettingsTab('language')">
+          <span class="sit-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <span class="sit-label">${t('settings_language')}</span>
+        </button>
+        <button class="sit-btn" id="settings-tab-feedback" onclick="showSettingsTab('feedback')">
+          <span class="sit-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="sit-label">${t('settings_feedback')}</span>
+        </button>
       </div>
       <div id="settings-profile-content"></div>
       <div id="settings-supplements-content" style="display:none"></div>
@@ -4757,7 +4768,7 @@ function renderSettingsLanguage() {
     <div style="margin-top:16px">
       <div class="card card-lg fade-in" style="margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">🌐</div>
+          <div style="width:40px;height:40px;border-radius:10px;background:#e8f0fe;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
           <div>
             <div style="font-size:1rem;font-weight:800;color:var(--text)">${t('lang_title')}</div>
             <div style="font-size:0.75rem;color:var(--text3);margin-top:2px">${t('lang_subtitle')}</div>
@@ -4789,7 +4800,7 @@ function changeLang(code) {
   };
   Object.entries(tabMap).forEach(([tab, key]) => {
     const btn = document.getElementById('settings-tab-' + tab);
-    if (btn) btn.innerHTML = t(key);
+    if (btn) { const lbl = btn.querySelector('.sit-label'); if (lbl) lbl.textContent = t(key); }
   });
   autoSaveSettings();
 }
@@ -4801,7 +4812,7 @@ function renderSettingsFeedback() {
     <div style="margin-top:16px">
       <div class="card card-lg fade-in" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-          <div style="width:40px;height:40px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">&#128172;</div>
+          <div style="width:40px;height:40px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
           <div>
             <div style="font-size:1rem;font-weight:800;color:var(--text)">${t('feedback_title')}</div>
             <div style="font-size:0.75rem;color:var(--text3);margin-top:2px">${t('feedback_subtitle')}</div>
@@ -4809,11 +4820,11 @@ function renderSettingsFeedback() {
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
           <span style="font-size:0.8rem;font-weight:600;color:var(--text2)">${t('feedback_type_label')}</span>
-          ${[['general', t('feedback_type_general'), '&#128172;'],['bug', t('feedback_type_bug'), '&#128027;'],['idea', t('feedback_type_idea'), '&#128161;']].map(([val, lbl, icon]) => `
+          ${[['general', t('feedback_type_general')],['bug', t('feedback_type_bug')],['idea', t('feedback_type_idea')]].map(([val, lbl]) => `
             <button id="fb-type-${val}" onclick="selectFeedbackType('${val}')"
               style="padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg2);
               cursor:pointer;font-size:0.78rem;font-weight:600;color:var(--text2);transition:all 0.15s">
-              ${icon} ${lbl}
+              ${lbl}
             </button>
           `).join('')}
         </div>
