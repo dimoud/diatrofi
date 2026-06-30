@@ -1599,6 +1599,46 @@ function renderWeek() {
             <div style="font-size:0.55rem;color:var(--text3)">${dd.stepsDone ? `👣${(dd.stepsCount/1000).toFixed(1)}k` : ''}${dd.hasTraining ? ' 🏋️' : ''}</div>
           </div>`;
         }).join('');
+
+        // ── Πρόβλεψη βάσει TDEE συντήρησης ──
+        const tdee = calcTDEE(state.profile);
+        const goalKcalPerDay = state.goals.kcal || tdee;
+        const tdeeWeeklyDeficit = (tdee - goalKcalPerDay) * 7;
+        const tdeeKgEquiv = (tdeeWeeklyDeficit / 7700).toFixed(2);
+        const tdeeColor = tdeeWeeklyDeficit >= 0 ? '#22c55e' : '#ef4444';
+
+        // ── Πραγματική μεταβολή βάρους από bodyLog ──
+        let actualWeightHtml = '';
+        if (state.planStartDate && (state.bodyLog || []).length >= 2) {
+          const startDate = state.planStartDate;
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 6);
+          const endDateStr = endDate.toISOString().split('T')[0];
+          const log = state.bodyLog;
+          // Βρες μέτρηση πριν/στην αρχή και μέτρηση μετά/στο τέλος της εβδομάδας
+          const before = [...log].reverse().find(e => e.date <= startDate);
+          const after  = [...log].find(e => e.date >= startDate && e.date <= endDateStr);
+          const afterOrLatest = after || (log[log.length - 1].date > startDate ? log[log.length - 1] : null);
+          if (before && afterOrLatest && before.date !== afterOrLatest.date) {
+            const actualDelta = afterOrLatest.weight - before.weight;
+            const actualColor = actualDelta <= 0 ? '#22c55e' : '#ef4444';
+            const sign = actualDelta <= 0 ? '' : '+';
+            actualWeightHtml = `
+              <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;border:1.5px solid #e2e8f0;margin-top:12px">
+                <div style="font-size:0.68rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">⚖️ Πραγματική Μεταβολή Βάρους</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                  <div style="font-size:0.75rem;color:var(--text2)">
+                    ${before.date}: <strong>${before.weight}kg</strong> → ${afterOrLatest.date}: <strong>${afterOrLatest.weight}kg</strong>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-size:1.2rem;font-weight:900;color:${actualColor}">${sign}${actualDelta.toFixed(1)} kg</div>
+                    <div style="font-size:0.62rem;color:var(--text3)">πραγματική αλλαγή</div>
+                  </div>
+                </div>
+              </div>`;
+          }
+        }
+
         return `<div style="padding:0 16px;margin-bottom:10px">
           <div style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
             <div style="font-size:0.75rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">🏃 Εβδομαδιαία Δραστηριότητα & Έλλειμμα</div>
@@ -1614,6 +1654,28 @@ function renderWeek() {
                 <div style="font-size:0.62rem;color:var(--text3)">εβδομαδιαίο ${weeklyDeficit >= 0 ? 'έλλειμμα' : 'πλεόνασμα'}</div>
               </div>
             </div>
+
+            <!-- Προβλέψεις απώλειας -->
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <!-- Πρόβλεψη βάσει TDEE συντήρησης -->
+              <div style="background:#f0fdf4;border-radius:10px;padding:12px;border:1.5px solid #bbf7d0;text-align:center">
+                <div style="font-size:0.62rem;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">📐 Βάσει TDEE Συντήρησης</div>
+                <div style="font-size:0.7rem;color:#166534;margin-bottom:6px">TDEE: <strong>${tdee.toLocaleString()} kcal</strong> · Στόχος: <strong>${goalKcalPerDay.toLocaleString()} kcal</strong></div>
+                <div style="font-size:1.15rem;font-weight:900;color:${tdeeColor}">${tdeeWeeklyDeficit >= 0 ? '−' : '+'}${Math.abs(tdeeWeeklyDeficit).toLocaleString()} kcal</div>
+                <div style="font-size:0.72rem;font-weight:700;color:${tdeeColor};margin-top:2px">≈ ${parseFloat(tdeeKgEquiv) >= 0 ? '-' : '+'}${Math.abs(parseFloat(tdeeKgEquiv))} kg</div>
+                <div style="font-size:0.58rem;color:#166534;margin-top:3px">θεωρητική πρόβλεψη</div>
+              </div>
+              <!-- Πρόβλεψη βάσει πραγματικής καύσης -->
+              <div style="background:#eff6ff;border-radius:10px;padding:12px;border:1.5px solid #bfdbfe;text-align:center">
+                <div style="font-size:0.62rem;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">🏃 Βάσει Πραγματικής Καύσης</div>
+                <div style="font-size:0.7rem;color:#1e3a8a;margin-bottom:6px">Καύση: <strong>${weeklyBurn.toLocaleString()} kcal</strong> · Κατ/ση: <strong>${weeklyConsumed.toLocaleString()} kcal</strong></div>
+                <div style="font-size:1.15rem;font-weight:900;color:${deficitColor}">${weeklyDeficit >= 0 ? '−' : '+'}${Math.abs(weeklyDeficit).toLocaleString()} kcal</div>
+                <div style="font-size:0.72rem;font-weight:700;color:${kgColor};margin-top:2px">≈ ${parseFloat(kgEquiv) >= 0 ? '-' : '+'}${Math.abs(parseFloat(kgEquiv))} kg</div>
+                <div style="font-size:0.58rem;color:#1e3a8a;margin-top:3px">με βήματα & προπόνηση</div>
+              </div>
+            </div>
+
+            ${actualWeightHtml}
           </div>
         </div>`;
       })()}
