@@ -436,7 +436,7 @@ const RECIPES_DB = [
   },
   // ─── ΣΝΑΚ (original) ───
   {
-    id: "r30", name: "Πρωτεϊνούχο Σέικ + Φρούτο", meal: "snack", emoji: "💪",
+    id: "r30", name: "Shaker Πρωτεΐνης + Φρούτο", meal: "snack", emoji: "💪",
     ingredients: [{ foodId: "f9", qty: 30 }, { foodId: "fr2", qty: 150 }],
     instructions: "1. Ανακάτεψε 30g whey σε 250-300ml νερό ή γάλα με κουτάλι ή σέικερ.",
     serving: "Πίνε αμέσως. Φάε το φρούτο δίπλα ή μέσα στο σέικ. Ιδανικό post-workout σνακ."
@@ -874,10 +874,10 @@ const STANDARD_MEALS = [
   },
   {
     id: "sm32", meal: "dinner", emoji: "🐟",
-    name: "Σαρδέλες κονσέρβα + ψωμί",
+    name: "Σολομός κονσέρβα + ψωμί",
     kcal_est: 380, p: 28, c: 32, f: 16,
     note: "Ωμέγα-3 + εύκολο",
-    items: ["1 κονσέρβα σαρδέλες (~125g)", "2 φέτες ψωμί ολικής"]
+    items: ["1 κονσέρβα σολομός (~125g)", "2 φέτες ψωμί ολικής"]
   },
   {
     id: "sm33", meal: "dinner", emoji: "🧀",

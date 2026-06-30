@@ -110,6 +110,15 @@ async function loadState() {
       console.error('Failed to load from Supabase:', e);
     }
   }
+  // Migrate 16:00 snack → afternoon
+  if (state.week) {
+    state.week.forEach(day => {
+      if (day.meals) day.meals.forEach(m => {
+        if (m.type === 'snack' && m.time && m.time >= '14:00') m.type = 'afternoon';
+      });
+    });
+  }
+
   // Migrate old array-based supplements to new object structure
   if (Array.isArray(state.supplements)) {
     state.supplements = { ...SUPPLEMENTS_STATE_DEFAULT };
@@ -416,65 +425,163 @@ function renderBodyMeasurementsCard() {
   const today = new Date().toISOString().split('T')[0];
   const latest = log.length > 0 ? log[log.length - 1] : null;
 
-  const historyHtml = log.length === 0
-    ? '<div style="font-size:0.78rem;color:var(--text3);text-align:center;padding:12px 0">Δεν υπάρχουν μετρήσεις ακόμα</div>'
+  // ── Stat cards (top 3) ──
+  const weightCard = latest
+    ? `<div style="flex:1;background:#eff6ff;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">🏋️</span>
+        <span style="font-size:1.35rem;font-weight:800;color:#3b82f6;line-height:1">${latest.weight} kg</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Βάρος</span>
+       </div>`
+    : `<div style="flex:1;background:#eff6ff;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">🏋️</span>
+        <span style="font-size:1rem;font-weight:600;color:#9ca3af">—</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Βάρος</span>
+       </div>`;
+
+  const fatCard = latest && latest.fat !== null && latest.fat !== undefined
+    ? `<div style="flex:1;background:#fef2f2;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">🩸</span>
+        <span style="font-size:1.35rem;font-weight:800;color:#ef4444;line-height:1">${latest.fat}%</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Λίπος</span>
+       </div>`
+    : `<div style="flex:1;background:#fef2f2;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">🩸</span>
+        <span style="font-size:1rem;font-weight:600;color:#9ca3af">—</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Λίπος</span>
+       </div>`;
+
+  const muscleCard = latest && latest.muscle !== null && latest.muscle !== undefined
+    ? `<div style="flex:1;background:#f0fdf4;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">💪</span>
+        <span style="font-size:1.35rem;font-weight:800;color:#16a34a;line-height:1">${latest.muscle}%</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Μυϊκή μάζα</span>
+       </div>`
+    : `<div style="flex:1;background:#f0fdf4;border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span style="font-size:1.5rem">💪</span>
+        <span style="font-size:1rem;font-weight:600;color:#9ca3af">—</span>
+        <span style="font-size:0.72rem;color:#6b7280;font-weight:500">Μυϊκή μάζα</span>
+       </div>`;
+
+  const dateChip = latest
+    ? `<div style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border-radius:20px;padding:6px 14px;font-size:0.78rem;color:#374151;font-weight:500;margin-top:4px">
+        <span>📅</span><span>${latest.date}</span>
+       </div>` : '';
+
+  const chartInfo = log.length < 2
+    ? `<div style="display:flex;align-items:center;gap:8px;background:#eff6ff;border-radius:10px;padding:10px 14px;font-size:0.8rem;color:#3b82f6;margin-top:8px">
+        <span style="font-size:1rem">ℹ️</span>
+        <span>Χρειάζονται τουλάχιστον 2 μετρήσεις για διάγραμμα</span>
+       </div>`
+    : `<div style="margin-top:10px">${renderBodyChart(log)}</div>`;
+
+  // ── History rows ──
+  const historyRows = log.length === 0
+    ? `<div style="font-size:0.8rem;color:var(--text3);text-align:center;padding:16px 0">Δεν υπάρχουν μετρήσεις ακόμα</div>`
     : [...log].reverse().slice(0, 8).map(e => {
-        const fatStr = e.fat !== null && e.fat !== undefined ? `· 🔴 ${e.fat}% λίπος` : '';
-        const muscleStr = e.muscle !== null && e.muscle !== undefined ? `· 🟢 ${e.muscle}% μυϊκή` : '';
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);gap:8px">
-          <div style="font-size:0.72rem;color:var(--text3);min-width:72px">${e.date}</div>
-          <div style="font-size:0.82rem;font-weight:700;flex:1">⚖️ ${e.weight}kg ${fatStr} ${muscleStr}</div>
-          <button onclick="deleteBodyEntry('${e.date}')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:0.75rem;padding:2px 4px">✕</button>
+        const fatBadge = e.fat !== null && e.fat !== undefined
+          ? `<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:1rem">🩸</span><span style="font-size:0.78rem;font-weight:700;color:#ef4444">${e.fat}%</span><span style="font-size:0.62rem;color:#9ca3af">Λίπος</span></div>` : '';
+        const muscleBadge = e.muscle !== null && e.muscle !== undefined
+          ? `<div style="display:flex;flex-direction:column;align-items:center;gap:1px"><span style="font-size:1rem">💪</span><span style="font-size:0.78rem;font-weight:700;color:#16a34a">${e.muscle}%</span><span style="font-size:0.62rem;color:#9ca3af">Μυϊκή μάζα</span></div>` : '';
+        return `<div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px">
+          <div style="font-size:0.75rem;color:#6b7280;min-width:76px;font-weight:500">${e.date}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex:1">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+              <span style="font-size:1rem">🏋️</span>
+              <span style="font-size:0.78rem;font-weight:700;color:#3b82f6">${e.weight} kg</span>
+              <span style="font-size:0.62rem;color:#9ca3af">Βάρος</span>
+            </div>
+            ${fatBadge}
+            ${muscleBadge}
+          </div>
+          <button onclick="deleteBodyEntry('${e.date}')" style="border:none;background:none;cursor:pointer;color:#d1d5db;font-size:1rem;padding:4px 6px;flex-shrink:0">✕</button>
+          <span style="color:#d1d5db;font-size:1rem">›</span>
         </div>`;
       }).join('');
 
-  const statChips = latest ? `
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <span class="chip" style="background:#eff6ff;color:#3b82f6">⚖️ ${latest.weight}kg</span>
-      ${latest.fat !== null && latest.fat !== undefined ? `<span class="chip" style="background:#fef2f2;color:#ef4444">🔴 ${latest.fat}% λίπος</span>` : ''}
-      ${latest.muscle !== null && latest.muscle !== undefined ? `<span class="chip" style="background:#f0fdf4;color:#16a34a">🟢 ${latest.muscle}% μυϊκή</span>` : ''}
-      <span class="chip" style="background:var(--bg2);color:var(--text3);font-size:0.65rem">${latest.date}</span>
-    </div>` : '';
+  const showAll = log.length > 8
+    ? `<div style="text-align:center;padding-top:10px">
+        <span style="font-size:0.8rem;color:#16a34a;font-weight:600;cursor:pointer">Προβολή όλων των μετρήσεων ›</span>
+       </div>` : '';
 
-  return `<div class="card card-lg fade-in">
-    <div class="section-title">📊 Μετρήσεις Σώματος</div>
-    ${statChips}
+  return `
+  <div style="display:flex;flex-direction:column;gap:12px;padding-bottom:16px">
 
-    <!-- Διάγραμμα -->
-    <div style="margin-bottom:14px">${renderBodyChart(log)}</div>
-
-    <!-- Φόρμα νέας μέτρησης -->
-    <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
-      <div style="font-size:0.78rem;font-weight:700;color:var(--text2);margin-bottom:10px">➕ Νέα Μέτρηση</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div class="form-group" style="margin:0">
-          <label style="font-size:0.72rem">Ημερομηνία</label>
-          <input type="date" id="bm-date" value="${today}"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:0.72rem">Βάρος (kg)</label>
-          <input type="number" id="bm-weight" placeholder="π.χ. 95.5" step="0.1" min="30" max="300"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:0.72rem">% Λίπους <span style="color:var(--text3)">(προαιρ.)</span></label>
-          <input type="number" id="bm-fat" placeholder="π.χ. 22.5" step="0.1" min="3" max="60"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
-        </div>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:0.72rem">% Μυϊκής Μάζας <span style="color:var(--text3)">(προαιρ.)</span></label>
-          <input type="number" id="bm-muscle" placeholder="π.χ. 38.0" step="0.1" min="10" max="80"
-            style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:var(--card)">
+    <!-- Κάρτα 1: Header + Stats -->
+    <div class="card card-lg fade-in" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+        <div style="width:44px;height:44px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">📊</div>
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:#111;letter-spacing:0.02em">ΜΕΤΡΗΣΕΙΣ ΣΩΜΑΤΟΣ</div>
+          <div style="font-size:0.75rem;color:#9ca3af;margin-top:2px">Παρακολούθησε την πρόοδό σου</div>
         </div>
       </div>
-      <button class="btn btn-green btn-full" onclick="addBodyMeasurement()">💾 Αποθήκευση Μέτρησης</button>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        ${weightCard}${fatCard}${muscleCard}
+      </div>
+
+      ${dateChip}
+      ${chartInfo}
     </div>
 
-    <!-- Ιστορικό -->
-    <div style="font-size:0.75rem;font-weight:700;color:var(--text2);margin-bottom:6px">📋 Ιστορικό (τελευταίες 8)</div>
-    ${historyHtml}
-    ${log.length > 8 ? `<div style="font-size:0.72rem;color:var(--text3);margin-top:6px;text-align:center">+${log.length - 8} παλαιότερες εγγραφές</div>` : ''}
+    <!-- Κάρτα 2: Φόρμα -->
+    <div class="card card-lg fade-in" style="padding:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <span style="font-size:1.2rem;color:#16a34a;font-weight:800">+</span>
+        <span style="font-size:0.95rem;font-weight:800;color:#16a34a;letter-spacing:0.03em">ΝΕΑ ΜΕΤΡΗΣΗ</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;margin-bottom:6px;display:block">Ημερομηνία</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:0.9rem;pointer-events:none">📅</span>
+            <input type="date" id="bm-date" value="${today}"
+              style="width:100%;padding:10px 10px 10px 32px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.85rem;background:#fff;box-sizing:border-box">
+          </div>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;margin-bottom:6px;display:block">Βάρος (kg)</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:0.9rem;pointer-events:none">🏋️</span>
+            <input type="number" id="bm-weight" placeholder="π.χ. 95.5" step="0.1" min="30" max="300"
+              style="width:100%;padding:10px 10px 10px 32px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.85rem;background:#fff;box-sizing:border-box">
+          </div>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;margin-bottom:6px;display:block">% Λίπους <span style="color:#9ca3af;font-weight:400">(προαιρετικό)</span></label>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:0.9rem;pointer-events:none">🩸</span>
+            <input type="number" id="bm-fat" placeholder="π.χ. 22.5" step="0.1" min="3" max="60"
+              style="width:100%;padding:10px 10px 10px 32px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.85rem;background:#fff;box-sizing:border-box">
+          </div>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;margin-bottom:6px;display:block">% Μυϊκής Μάζας <span style="color:#9ca3af;font-weight:400">(προαιρετικό)</span></label>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:0.9rem;pointer-events:none">💪</span>
+            <input type="number" id="bm-muscle" placeholder="π.χ. 38.0" step="0.1" min="10" max="80"
+              style="width:100%;padding:10px 10px 10px 32px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:0.85rem;background:#fff;box-sizing:border-box">
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="addBodyMeasurement()" style="padding:14px;font-size:0.95rem;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span>💾</span> Αποθήκευση Μέτρησης
+      </button>
+    </div>
+
+    <!-- Κάρτα 3: Ιστορικό -->
+    <div class="card card-lg fade-in" style="padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:1.1rem">📋</span>
+          <span style="font-size:0.9rem;font-weight:800;color:#111">ΙΣΤΟΡΙΚΟ ΜΕΤΡΗΣΕΩΝ</span>
+        </div>
+        ${log.length > 0 ? `<span style="background:#f1f5f9;border-radius:20px;padding:3px 10px;font-size:0.72rem;color:#6b7280;font-weight:600">${log.length} μετρήσεις</span>` : ''}
+      </div>
+      ${historyRows}
+      ${showAll}
+    </div>
+
   </div>`;
 }
 
@@ -1894,20 +2001,23 @@ function renderRecipes(filter = '') {
 
   let html = `
     <div class="container">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <h2>📖 Συνταγές</h2>
-        <button class="btn btn-green btn-sm" onclick="openAddRecipeModal()">➕ Νέα</button>
-      </div>
-      <div class="search-wrap"><span class="search-icon">🔍</span>
-        <input type="text" placeholder="Αναζήτηση συνταγής..." value="${filter}" oninput="renderRecipes(this.value)">
-      </div>
-      <div class="segment">
-        <button class="seg-btn active" onclick="filterRecipeType('all',this)">Όλες</button>
-        <button class="seg-btn" onclick="filterRecipeType('breakfast',this)">Πρωινά</button>
-        <button class="seg-btn" onclick="filterRecipeType('snack',this)">Δεκατιανό</button>
-        <button class="seg-btn" onclick="filterRecipeType('lunch',this)">Μεσ/νά</button>
-        <button class="seg-btn" onclick="filterRecipeType('afternoon',this)">Απογ/νό</button>
-        <button class="seg-btn" onclick="filterRecipeType('dinner',this)">Βραδινά</button>
+      <div class="rc-card">
+        <div class="rc-header">
+          <span class="rc-title">📖 Συνταγές</span>
+          <button class="rc-new-btn" onclick="openAddRecipeModal()">+ Νέα συνταγή</button>
+        </div>
+        <div class="rc-search">
+          <svg class="rc-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Αναζήτηση συνταγής..." value="${filter}" oninput="renderRecipes(this.value)">
+        </div>
+        <div class="recipe-filter-pills">
+          <button class="recipe-pill active" onclick="filterRecipeType('all',this)">Όλες</button>
+          <button class="recipe-pill" onclick="filterRecipeType('breakfast',this)">☀️ Πρωινά</button>
+          <button class="recipe-pill" onclick="filterRecipeType('snack',this)">🍎 Δεκατιανό</button>
+          <button class="recipe-pill" onclick="filterRecipeType('lunch',this)">☀️ Μεσημεριανά</button>
+          <button class="recipe-pill" onclick="filterRecipeType('afternoon',this)">☕ Απογευματινό</button>
+          <button class="recipe-pill" onclick="filterRecipeType('dinner',this)">🌙 Βραδινά</button>
+        </div>
       </div>`;
 
   mealTypes.forEach(type => {
@@ -1928,12 +2038,12 @@ function renderRecipes(filter = '') {
         }).join('')}
       </div>`;
   });
-  html += '</div>';
+  html += '</div></div>';
   document.getElementById('page-recipes').innerHTML = html;
 }
 
 function filterRecipeType(type, btn) {
-  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.recipe-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('[data-type]').forEach(el => {
     el.style.display = (type === 'all' || el.dataset.type === type) ? '' : 'none';
