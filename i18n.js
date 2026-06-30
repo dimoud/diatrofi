@@ -83,12 +83,12 @@ const I18N = {
   feedback_type_idea:    { el: 'Ιδέα', en: 'Idea', es: 'Idea', fr: 'Idée' },
 
   // ── Donate section ──
-  donate_title:     { el: '❤️ Υποστήριξε το VIVON', en: '❤️ Support VIVON', es: '❤️ Apoya VIVON', fr: '❤️ Soutenez VIVON' },
-  donate_subtitle:  { el: 'Αν σου αρέσει η εφαρμογή, μπορείς να με στηρίξεις με μια μικρή δωρεά!', en: 'If you enjoy the app, you can support me with a small donation!', es: 'Si te gusta la app, ¡puedes apoyarme con una pequeña donación!', fr: 'Si vous aimez l\'application, vous pouvez me soutenir avec un petit don !' },
-  donate_btn:       { el: '☕ Κέρνα με ένα καφέ', en: '☕ Buy me a coffee', es: '☕ Invítame un café', fr: '☕ Offrez-moi un café' },
-  donate_or:        { el: 'ή', en: 'or', es: 'o', fr: 'ou' },
-  donate_paypal:    { el: '💳 Δωρεά μέσω PayPal', en: '💳 Donate via PayPal', es: '💳 Donar vía PayPal', fr: '💳 Don via PayPal' },
-  donate_thanks:    { el: 'Κάθε βοήθεια μετράει! 🙏', en: 'Every bit helps! 🙏', es: '¡Cualquier ayuda cuenta! 🙏', fr: 'Chaque aide compte ! 🙏' },
+  donate_title:    { el: '❤️ Υποστήριξε το VIVON', en: '❤️ Support VIVON', es: '❤️ Apoya VIVON', fr: '❤️ Soutenez VIVON' },
+  donate_subtitle: { el: 'Αν σου αρέσει η εφαρμογή, μπορείς να με στηρίξεις με μια μικρή δωρεά!', en: 'If you enjoy the app, you can support me with a small donation!', es: 'Si te gusta la app, ¡puedes apoyarme con una pequeña donación!', fr: 'Si vous aimez l\'application, vous pouvez me soutenir avec un petit don !' },
+  donate_paypal:   { el: '💳 Δωρεά μέσω PayPal', en: '💳 Donate via PayPal', es: '💳 Donar vía PayPal', fr: '💳 Don via PayPal' },
+  donate_revolut:  { el: '🔄 Δωρεά μέσω Revolut', en: '🔄 Donate via Revolut', es: '🔄 Donar vía Revolut', fr: '🔄 Don via Revolut' },
+  donate_or:       { el: 'ή', en: 'or', es: 'o', fr: 'ou' },
+  donate_thanks:   { el: 'Κάθε βοήθεια μετράει! 🙏', en: 'Every bit helps! 🙏', es: '¡Cualquier ayuda cuenta! 🙏', fr: 'Chaque aide compte ! 🙏' },
 };
 
 // ── Current language (default: Greek) ──

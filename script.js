@@ -4727,20 +4727,22 @@ function renderSettingsFeedback() {
             <div style="font-size:0.75rem;color:#a16207;margin-top:2px">${t('donate_subtitle')}</div>
           </div>
         </div>
-        <a href="https://www.buymeacoffee.com" target="_blank" rel="noopener"
-          style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;
-          border-radius:12px;background:#FFDD00;color:#000;font-size:0.95rem;font-weight:800;
-          text-decoration:none;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:opacity 0.15s"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-          ${t('donate_btn')}
-        </a>
-        <div style="text-align:center;font-size:0.78rem;color:var(--text3);margin-bottom:10px">${t('donate_or')}</div>
-        <a href="https://www.paypal.com/donate" target="_blank" rel="noopener"
+        <!-- PAYPAL LINK: αντικατέστησε το href με το δικό σου paypal.me/... ή paypal.com/donate?... -->
+        <a href="https://paypal.me/VIVON" target="_blank" rel="noopener"
           style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;
           border-radius:12px;background:#0070BA;color:#fff;font-size:0.95rem;font-weight:800;
-          text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.15s"
+          text-decoration:none;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity 0.15s"
           onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
           ${t('donate_paypal')}
+        </a>
+        <div style="text-align:center;font-size:0.78rem;color:var(--text3);margin-bottom:10px">${t('donate_or')}</div>
+        <!-- REVOLUT LINK: αντικατέστησε το href με το δικό σου revolut.me/... -->
+        <a href="https://revolut.me/VIVON" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;
+          border-radius:12px;background:#191C1F;color:#fff;font-size:0.95rem;font-weight:800;
+          text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.18);transition:opacity 0.15s"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          ${t('donate_revolut')}
         </a>
         <div style="text-align:center;font-size:0.82rem;color:#92400e;font-weight:700;margin-top:14px">${t('donate_thanks')}</div>
       </div>
