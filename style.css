@@ -1771,6 +1771,7 @@ select:focus, textarea:focus {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 .auth-input-icon {
   position: absolute;
@@ -1782,9 +1783,10 @@ select:focus, textarea:focus {
 }
 .auth-input {
   width: 100%;
+  min-width: 0;
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
-  padding: 11px 13px 11px 40px;
+  padding: 11px 13px 11px 42px;
   font-size: 0.95rem;
   background: #fafafa;
   color: #1a1d23;
@@ -1889,4 +1891,5 @@ select:focus, textarea:focus {
 @media (max-width: 480px) {
   .auth-card { padding: 20px 14px 20px; }
   .auth-logo-img { height: 140px; }
+  .auth-input { font-size: 16px; }
 }
