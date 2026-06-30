@@ -414,7 +414,15 @@
   window.handleSignOut = async function () {
     // Hide app and show auth immediately — no lag
     showAuthScreen();
+    // Cancel any pending debounced save so it cannot fire for the next user
+    if (typeof _saveTimer !== 'undefined') {
+      try { clearTimeout(_saveTimer); _saveTimer = null; } catch(e) {}
+    }
     try { localStorage.removeItem('nutriApp_v2'); } catch (e) {}
+    // Reset in-memory state immediately so next login starts clean
+    if (typeof _freshState === 'function') {
+      try { state = _freshState(); } catch(e) {}
+    }
     await sbSignOut();
     // onAuthStateChange SIGNED_OUT also fires but showAuthScreen already ran
   };

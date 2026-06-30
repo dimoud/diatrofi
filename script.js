@@ -44,8 +44,12 @@ function getMealTimes() {
 let _saveTimer = null;
 
 function saveState() {
-  // Fast local cache for instant UI on reload
-  try { localStorage.setItem('nutriApp_v2', JSON.stringify(state)); } catch(e) {}
+  // Fast local cache for instant UI on reload — stamped with userId for ownership check
+  try {
+    const user = sbGetCurrentUser();
+    const cacheEntry = user ? { ...state, _userId: user.id } : state;
+    localStorage.setItem('nutriApp_v2', JSON.stringify(cacheEntry));
+  } catch(e) {}
   // Debounced cloud save (1.5 s after last change)
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(syncToSupabase, 1500);
@@ -54,21 +58,24 @@ function saveState() {
 async function syncToSupabase() {
   const user = sbGetCurrentUser();
   if (!user) return;
+  // Snapshot userId and state now — guard against user switching mid-async
+  const syncUserId = user.id;
+  const snap = JSON.parse(JSON.stringify(state));
   const weekKey = getISOWeekKey();
   try {
     await Promise.all([
-      sbSaveProfile(user.id, state.profile),
-      sbSaveGoals(user.id, state.goals),
-      sbSaveWeekPlan(user.id, weekKey, state.week),
-      sbSaveBodyLog(user.id, state.bodyLog),
-      sbSaveSupplements(user.id, state.supplements),
-      sbSaveCustomFoods(user.id, state.customFoods),
-      sbSaveCustomRecipes(user.id, state.customRecipes),
-      sbSaveUserState(user.id, {
-        favorites:    state.favorites,
-        dayTemplates: state.dayTemplates,
-        optimizeMode: state.optimizeMode,
-        activeTab:    state.activeTab,
+      sbSaveProfile(syncUserId, snap.profile),
+      sbSaveGoals(syncUserId, snap.goals),
+      sbSaveWeekPlan(syncUserId, weekKey, snap.week),
+      sbSaveBodyLog(syncUserId, snap.bodyLog),
+      sbSaveSupplements(syncUserId, snap.supplements),
+      sbSaveCustomFoods(syncUserId, snap.customFoods),
+      sbSaveCustomRecipes(syncUserId, snap.customRecipes),
+      sbSaveUserState(syncUserId, {
+        favorites:    snap.favorites,
+        dayTemplates: snap.dayTemplates,
+        optimizeMode: snap.optimizeMode,
+        activeTab:    snap.activeTab,
       }),
     ]);
   } catch(e) {
@@ -78,37 +85,65 @@ async function syncToSupabase() {
 
 let _isNewUser = false;
 
+function _freshState() {
+  return {
+    profile: { ...DEFAULT_PROFILE },
+    goals: { ...DEFAULT_GOALS },
+    week: JSON.parse(JSON.stringify(DEFAULT_WEEK)),
+    weekCreatedAt: Date.now(),
+    currentDay: 0,
+    supplements: JSON.parse(JSON.stringify(SUPPLEMENTS_STATE_DEFAULT)),
+    favorites: [],
+    customFoods: [],
+    customRecipes: [],
+    dayTemplates: [],
+    activeTab: 'today',
+    optimizeMode: 1,
+    bodyLog: [],
+  };
+}
+
 async function loadState() {
-  // 1. Load from localStorage first for instant render
+  // Always start from a clean slate to prevent data bleed between users
+  state = _freshState();
+  const defaults = _freshState();
+
+  const user = sbGetCurrentUser();
+
+  // 1. Load from localStorage — only if cache belongs to this exact user
   let hasLocal = false;
   try {
     const raw = localStorage.getItem('nutriApp_v2');
     if (raw) {
-      hasLocal = true;
       const saved = JSON.parse(raw);
-      state = {
-        ...state,
-        ...saved,
-        profile: { ...state.profile, ...(saved.profile || {}) },
-        goals:   { ...state.goals,   ...(saved.goals   || {}) },
-      };
+      if (!user || !saved._userId || saved._userId === user.id) {
+        hasLocal = true;
+        state = {
+          ...defaults,
+          ...saved,
+          profile: { ...defaults.profile, ...(saved.profile || {}) },
+          goals:   { ...defaults.goals,   ...(saved.goals   || {}) },
+        };
+      } else {
+        // Stale cache from a different user — discard immediately
+        try { localStorage.removeItem('nutriApp_v2'); } catch(e) {}
+      }
     }
   } catch(e) {}
 
   // 2. Fetch from Supabase (source of truth) and overwrite
-  const user = sbGetCurrentUser();
   if (user) {
     try {
       const cloud = await sbLoadUserData(user.id);
       if (cloud && Object.keys(cloud).length > 0) {
         state = {
-          ...state,
+          ...defaults,
           ...cloud,
-          profile: { ...state.profile, ...(cloud.profile || {}) },
-          goals:   { ...state.goals,   ...(cloud.goals   || {}) },
+          profile: { ...defaults.profile, ...(cloud.profile || {}) },
+          goals:   { ...defaults.goals,   ...(cloud.goals   || {}) },
         };
-        // Update localStorage cache with fresh cloud data
-        try { localStorage.setItem('nutriApp_v2', JSON.stringify(state)); } catch(e) {}
+        // Stamp cache with userId so a future login can validate ownership
+        try { localStorage.setItem('nutriApp_v2', JSON.stringify({ ...state, _userId: user.id })); } catch(e) {}
       } else if (!hasLocal) {
         // No data in cloud and no local cache → brand new user
         _isNewUser = true;
@@ -1129,10 +1164,7 @@ function renderProfile() {
           Ημ1: ${formatPlanDay(0)} &nbsp;·&nbsp; Ημ4: ${formatPlanDay(3)} &nbsp;·&nbsp; Ημ7: ${formatPlanDay(6)}
         </div>` : ''}
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="saveState();showToast('✅ Αποθηκεύτηκε!')">
-            💾 Αποθήκευση
-          </button>
-          <button id="ai-generate-btn" class="btn btn-green btn-sm" style="flex:2;font-weight:800" onclick="generateWeekWithAI()">
+          <button id="ai-generate-btn" class="btn btn-green btn-full" style="font-weight:800" onclick="generateWeekWithAI()">
             ✨ Δημιουργία Πλάνου με AI
           </button>
         </div>
@@ -1205,6 +1237,7 @@ function liveUpdateName(val) {
   document.getElementById('top-app-title').textContent = val ? `🥗 ${val}` : '🥗 Vivon';
   updateSidebarAvatar();
   saveState();
+  autoSaveSettings();
 }
 
 function liveUpdateProfile() {
@@ -1270,6 +1303,8 @@ function liveUpdateProfile() {
   // Update steps value label
   const stepsValEl = document.getElementById('prof-steps-val');
   if (stepsValEl) stepsValEl.textContent = p.dailySteps || 0;
+
+  autoSaveSettings();
 }
 
 function updateGoalFromProfile(key, val) {
@@ -1280,6 +1315,7 @@ function updateGoalFromProfile(key, val) {
   const el = document.getElementById(labels[key]);
   if (el) el.textContent = v + suffixes[key];
   saveState();
+  autoSaveSettings();
 }
 
 function updateFirstMealTime(val) {
@@ -1293,6 +1329,7 @@ function updateFirstMealTime(val) {
     });
   });
   saveState();
+  autoSaveSettings();
   // Ανανέωση preview χωρίς πλήρες re-render
   const preview = document.getElementById('meal-times-preview');
   if (preview) {
@@ -1315,6 +1352,7 @@ function toggleCustomTDEE(val) {
   if (!val) state.profile.customTDEE = 0;
   saveState();
   renderProfile();
+  autoSaveSettings();
 }
 
 function updateCustomTDEE(val) {
@@ -1324,6 +1362,7 @@ function updateCustomTDEE(val) {
     saveState();
     const tdeeEl = document.querySelector('#profile-stats-card .tdee-val');
     if (tdeeEl) tdeeEl.textContent = v;
+    autoSaveSettings();
   }
 }
 
@@ -1333,6 +1372,7 @@ function resetToSuggestedTDEE() {
   saveState();
   renderProfile();
   showToast('↺ Επιστροφή σε αυτόματο TDEE');
+  autoSaveSettings();
 }
 
 function applyTDEEGoal() {
@@ -1347,11 +1387,12 @@ function applyTDEEGoal() {
   saveState();
   renderProfile();
   showToast(`✅ Στόχοι: ${state.goals.kcal} kcal · ${prot}g πρωτ.`);
+  autoSaveSettings();
 }
 
 function saveProfile() {
   saveState();
-  showToast('✅ Προφίλ αποθηκεύτηκε!');
+  autoSaveSettings();
 }
 
 function shareProfile() {
@@ -1391,7 +1432,7 @@ function setPlanStartDate(dateStr) {
   state.planStartDate = dateStr;
   saveState();
   renderProfile();
-  showToast('📅 Έναρξη πλάνου αποθηκεύτηκε');
+  autoSaveSettings();
 }
 
 function saveDayStepsCount(val) {
@@ -3268,6 +3309,7 @@ function toggleSuppFeature(enabled) {
   saveState();
   renderSettingsSupplements();
   renderToday();
+  autoSaveSettings();
 }
 
 function toggleSuppActive(id) {
@@ -3278,6 +3320,7 @@ function toggleSuppActive(id) {
   saveState();
   renderSettingsSupplements();
   renderToday();
+  autoSaveSettings();
 }
 
 function toggleSuppInfo(id) {
@@ -4609,8 +4652,10 @@ function renderBodyPage() {
   document.getElementById('body-page-content').innerHTML = renderBodyMeasurementsCard();
 }
 
-function _settingsSaveBtn(id) {
-  return `<button id="${id}" class="btn btn-primary" style="width:100%;padding:13px;font-size:0.97rem;font-weight:700;border-radius:12px" onclick="saveSettingsToCloud()">${t('settings_save')}</button>`;
+let _autoSaveTimer = null;
+function autoSaveSettings() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => syncToSupabase().then(() => showToast(t('settings_saved'), 1800)).catch(() => {}), 1200);
 }
 
 function renderSettingsPage() {
@@ -4628,7 +4673,6 @@ function renderSettingsPage() {
       <div id="settings-supplements-content" style="display:none"></div>
       <div id="settings-language-content" style="display:none"></div>
       <div id="settings-feedback-content" style="display:none"></div>
-      ${_settingsSaveBtn('settings-save-bottom')}
     </div>`;
   renderProfileInto(document.getElementById('settings-profile-content'));
   renderSettingsSupplements();
@@ -4719,10 +4763,7 @@ function changeLang(code) {
     const btn = document.getElementById('settings-tab-' + tab);
     if (btn) btn.innerHTML = t(key);
   });
-  ['settings-save-top','settings-save-bottom'].forEach(id => {
-    const b = document.getElementById(id);
-    if (b) b.innerHTML = t('settings_save');
-  });
+  autoSaveSettings();
 }
 
 function renderSettingsFeedback() {
@@ -4858,9 +4899,6 @@ function showSettingsTab(which) {
     if (btn) btn.classList.toggle('active', tab === which);
     if (content) content.style.display = tab === which ? '' : 'none';
   });
-  // Hide save button on feedback tab (has its own send action)
-  const saveBtn = document.getElementById('settings-save-bottom');
-  if (saveBtn) saveBtn.style.display = which === 'feedback' ? 'none' : '';
 }
 
 async function saveSettingsToCloud() {
