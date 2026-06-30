@@ -1590,28 +1590,69 @@ select { cursor: pointer; }
 .dplanner-topcard {
   background: var(--card);
   border-radius: 16px;
-  padding: 18px 16px 14px;
+  padding: 16px 16px 14px;
   margin: 12px 12px 10px;
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
   display: none;
 }
 .dplanner-topcard-header {
-  display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
-.dplanner-topcard-title { font-size: 1.35rem; font-weight: 900; margin: 0; }
-.dplanner-topcard-sub   { font-size: 0.78rem; color: var(--text3); margin-top: 3px; }
-.dplanner-topcard-icon-btn {
-  width: 44px; height: 44px; border-radius: 50%;
+.dplanner-back-btn {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
   background: var(--bg); border: 1.5px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0; color: var(--text2);
-  transition: all var(--transition);
+  cursor: pointer; color: var(--text2); transition: all var(--transition);
+}
+.dplanner-back-btn:hover { background: var(--green-bg); border-color: var(--green-d); }
+.dplanner-topcard-title { font-size: 1.25rem; font-weight: 900; margin: 0; }
+.dplanner-topcard-sub   { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.dplanner-topcard-icon-btn {
+  width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+  background: var(--bg); border: 1.5px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); transition: all var(--transition);
 }
 .dplanner-topcard-icon-btn:hover { background: var(--green-bg); border-color: var(--green-d); }
 
+/* Status row */
+.dplanner-status-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;
+}
+.dplanner-status-left { display: flex; align-items: center; gap: 10px; }
+.dplanner-status-icon {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: #dcfce7; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.dplanner-status-title { font-size: 0.88rem; font-weight: 700; }
+.dplanner-status-meta  { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+.dplanner-preview-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px;
+  padding: 6px 12px; font-size: 0.75rem; font-weight: 600; color: var(--text2);
+  cursor: pointer; white-space: nowrap; transition: all var(--transition); flex-shrink: 0;
+}
+.dplanner-preview-btn:hover { border-color: var(--green-d); color: var(--green-d); }
 
-/* ── DAY SELECTOR CARD ── */
+.dplanner-btn-save {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--green-d); border: none; border-radius: 12px;
+  padding: 14px; font-size: 0.95rem; font-weight: 700; color: #fff;
+  cursor: pointer; margin-bottom: 8px; transition: opacity var(--transition);
+}
+.dplanner-btn-save:hover { opacity: 0.9; }
+.dplanner-btn-clear {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px;
+  background: none; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px; font-size: 0.88rem; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all var(--transition);
+}
+.dplanner-btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+/* ── SAVE DESTINATION + WEEK OVERVIEW CARDS ── */
 .dplanner-daycard {
   background: var(--card);
   border-radius: 16px;
@@ -1621,24 +1662,49 @@ select { cursor: pointer; }
   border: 1px solid var(--border);
   display: none;
 }
-.dplanner-daycard-header {
-  display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px;
-}
 .dplanner-daycard-title { font-size: 0.92rem; font-weight: 800; }
-.dplanner-daycard-sub   { font-size: 0.72rem; color: var(--text3); margin-top: 3px; }
-.dplanner-daycard-nav {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+
+/* Destination option rows */
+.dplanner-dest-row {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  background: none; border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; cursor: pointer; text-align: left;
+  margin-bottom: 8px; transition: border-color var(--transition);
+  color: var(--text);
 }
-.dplanner-daycard-label {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+.dplanner-dest-row:last-child { margin-bottom: 0; }
+.dplanner-dest-row:hover { border-color: var(--green-d); }
+.dplanner-dest-icon {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.dplanner-dest-info { flex: 1; min-width: 0; }
+.dplanner-dest-name { font-size: 0.85rem; font-weight: 700; }
+.dplanner-dest-sub  { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+
+/* Week overview grid */
+.dplanner-week-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 12px;
+}
+.dplanner-week-day {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
   background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
-  padding: 11px 14px; font-size: 0.88rem; font-weight: 600; cursor: default;
+  padding: 8px 4px; cursor: pointer; transition: all var(--transition);
 }
-.dplanner-daycard-info {
-  display: flex; align-items: flex-start; gap: 10px;
-  background: var(--green-bg); border-radius: 10px; padding: 10px 12px;
-  font-size: 0.78rem; color: #166534; line-height: 1.4;
+.dplanner-week-day.has-meals { background: #dcfce7; border-color: var(--green-d); }
+.dplanner-week-day.selected  { border-color: var(--green-d); box-shadow: 0 0 0 2px var(--green-d); }
+.dplanner-week-day-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
 }
+.dplanner-week-day.has-meals .dplanner-week-day-check { background: var(--green-d); }
+.dplanner-week-day-name { font-size: 0.7rem; font-weight: 700; color: var(--text); }
+.dplanner-week-day-num  { font-size: 0.58rem; color: var(--text3); }
+.dplanner-week-legend {
+  display: flex; gap: 14px; align-items: center;
+  font-size: 0.72rem; color: var(--text2);
+}
+.dplanner-week-legend-item { display: flex; align-items: center; gap: 5px; }
 
 /* 3-column grid */
 .dplanner-cols {
@@ -1921,9 +1987,9 @@ select { cursor: pointer; }
   .dplanner-col-body   { overflow: visible; max-height: none; }
 
   /* Show new mobile cards, hide desktop topbar */
-  .dplanner-topbar     { display: none; }
-  .dplanner-topcard    { display: block; }
-  .dplanner-daycard    { display: block; }
+  .dplanner-topbar  { display: none; }
+  .dplanner-topcard { display: block; }
+  .dplanner-daycard { display: block; }
 
   /* Compact 2-per-row meal cards on mobile */
   .dplanner-lib-grid   { grid-template-columns: 1fr 1fr; gap: 6px; }

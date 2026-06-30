@@ -2949,6 +2949,23 @@ function builderPageApply() {
   applyBuilderToDayIdx(dayIdx);
 }
 
+function builderSaveToDaySlot() {
+  if (!builderMeals.length) { showToast('⚠️ Δεν επιλέχτηκαν γεύματα'); return; }
+  openModal(`<div class="modal-handle"></div>
+    <div class="modal-title">📅 Αποθήκευση σε ημέρα</div>
+    <p style="font-size:0.82rem;color:var(--text2);margin-bottom:14px">Επίλεξε σε ποια ημέρα να εφαρμοστεί το πλάνο.</p>
+    <div class="recipes-grid">
+      ${state.week.map((d,i) => {
+        const hasMeals = d.meals && d.meals.length > 0;
+        const dayLabel = state.planStartDate ? formatPlanDay(i) : `Ημ${i+1}`;
+        return `<div class="recipe-card ${hasMeals ? 'favorite' : ''}" onclick="applyBuilderToDayIdx(${i})">
+          <div class="recipe-card-emoji">${hasMeals ? '✅' : '📅'}</div>
+          <div class="recipe-card-name">${d.label}<br><span style="font-size:0.68rem;color:var(--text3)">${dayLabel}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`);
+}
+
 function applyBuilderToDayIdx(dayIdx) {
   const allRecipes = [...RECIPES_DB, ...state.customRecipes];
   const typeTime = getMealTimes();
@@ -2967,10 +2984,9 @@ function applyBuilderToDayIdx(dayIdx) {
   builderMeals = [];
   saveState();
   closeModal();
-  showToast('✅ Day Builder → Ημέρα ' + (dayIdx+1) + '!');
-  navigateTo('today');
-  state.currentDay = dayIdx;
-  renderToday();
+  const dayName = state.week[dayIdx].label || `Ημέρα ${dayIdx+1}`;
+  showToast(`✅ Αποθηκεύτηκε στη ${dayName}!`);
+  renderBuilderPage(state._builderFilter || 'breakfast');
 }
 
 function builderPageClear() {
