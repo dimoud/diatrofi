@@ -709,7 +709,7 @@ function renderProfile() {
           <input type="time" id="prof-first-meal-time"
             value="${p.firstMealTime || '08:00'}"
             style="flex:1;padding:10px 12px;border:2px solid var(--green);border-radius:var(--radius-sm);font-size:1rem;font-weight:700;background:var(--bg2)"
-            onchange="updateFirstMealTime(this.value)">
+            oninput="updateFirstMealTime(this.value)">
         </div>
         <div id="meal-times-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem">
           ${(()=>{
@@ -870,6 +870,13 @@ function updateGoalFromProfile(key, val) {
 function updateFirstMealTime(val) {
   if (!val) return;
   state.profile.firstMealTime = val;
+  // Ενημέρωση ωρών σε όλες τις ημέρες βάσει τύπου γεύματος
+  const times = getMealTimes();
+  state.week.forEach(day => {
+    day.meals.forEach(meal => {
+      if (times[meal.type]) meal.time = times[meal.type];
+    });
+  });
   saveState();
   // Ανανέωση preview χωρίς πλήρες re-render
   const preview = document.getElementById('meal-times-preview');
@@ -879,6 +886,9 @@ function updateFirstMealTime(val) {
     const slots = [['🌅 Πρωινό',val],['🍎 Πρόαριστο',add(3)],['☀️ Μεσημεριανό',add(6)],['🧃 Απογευματινό',add(9)],['🌙 Βραδινό',add(12)]];
     preview.innerHTML = slots.map(([lbl,time])=>`<div style="background:var(--bg2);border-radius:var(--radius-sm);padding:6px 10px;display:flex;justify-content:space-between"><span style="color:var(--text2)">${lbl}</span><strong style="color:var(--text)">${time}</strong></div>`).join('');
   }
+  // Re-render ημερήσιου/εβδομαδιαίου ώστε οι ώρες να φαίνονται αμέσως
+  renderToday();
+  renderWeekPage();
 }
 
 function toggleCustomTDEE(val) {
@@ -1077,6 +1087,7 @@ function renderToday() {
   const q = getTodayQuote();
   const kcalPct = Math.round((doneMacros.kcal / effectiveKcal) * 100);
 
+  const mealDisplayTimes = getMealTimes();
   let runningKcal = 0;
   let mealsHtml = '';
   day.meals.forEach((meal, mi) => {
@@ -1142,7 +1153,7 @@ function renderToday() {
         <div class="meal-card-header">
           <div class="meal-emoji">${emoji}</div>
           <div class="meal-meta">
-            <div class="meal-time-badge">🕐 ${meal.time}</div>
+            <div class="meal-time-badge">🕐 ${mealDisplayTimes[meal.type] || meal.time}</div>
             <div class="meal-name">${name}</div>
             ${mealTypePill(meal.type)}
           </div>
@@ -2178,7 +2189,7 @@ function renderBuilderPage(typeFilter) {
             <div class="dplanner-stat">
               <div class="dplanner-stat-row"><span>🔥 Συνολικές θερμίδες</span><strong>${totalKcal} / ${goals.kcal} kcal</strong></div>
               <div class="dplanner-stat-row"><span>🍽️ Γεύματα επιλεγμένα</span><strong>${builderMeals.length}</strong></div>
-              <div class="dplanner-stat-row"><span>💧 Ενυδάτωση (στόχος 2L)</span><strong style="color:var(--blue)">— / 2L</strong></div>
+              <div class="dplanner-stat-row"><span>💧 Ενυδάτωση (στόχος 3L)</span><strong style="color:var(--blue)">— / 3L</strong></div>
               <div class="dplanner-stat-row"><span>⭐ Βαθμολογία πλάνου</span><strong>${score.toFixed(1)} / 10</strong></div>
             </div>
           </div>
