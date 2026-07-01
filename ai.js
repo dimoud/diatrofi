@@ -31,10 +31,11 @@ async function _checkRateLimit() {
     throw new Error(`Περίμενε ${mins}:${String(secs).padStart(2,'0')} λεπτά πριν την επόμενη βελτιστοποίηση`);
   }
 
-  // Record the call server-side and locally
+  // Record the call before making the AI request — prevents double-calls if
+  // the caller doesn't await and fires again during the in-flight request.
   const now = Date.now().toString();
   localStorage.setItem(AI_LAST_CALL_KEY, now);
-  if (user) sbSetAILastCall(user.id);
+  if (user) await sbSetAILastCall(user.id);
 }
 
 // ── Shared helpers ──────────────────────────────────────────

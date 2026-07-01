@@ -412,7 +412,7 @@
     if (msg.includes('Unable to validate email'))    return t('auth_error_invalid_email');
     if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit') || msg.includes('429'))
       return t('auth_error_rate_limit');
-    return msg;
+    return t('auth_error_generic');
   }
 
   // ── Sign-out (called from app UI) ─────────────────────────

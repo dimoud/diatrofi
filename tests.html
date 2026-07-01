@@ -643,7 +643,7 @@ test('javascript: is rejected', () => {
 });
 
 test('data:text/html is rejected', () => {
-  assert(!_isSafeUrl('data:text/html,<script>alert(1)</script>'));
+  assert(!_isSafeUrl('data:text/html,<scr' + 'ipt>alert(1)<\/scr' + 'ipt>'));
 });
 
 test('empty string is rejected', () => {

@@ -2,6 +2,10 @@
 // script.js — Main application logic
 // ============================================================
 
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── STATE ──
 let state = {
   profile: { ...DEFAULT_PROFILE },
@@ -2466,7 +2470,7 @@ function renderToday() {
         else qty = Math.round(qty);
         // Whey πάντα 30g
         if (ing.foodId === 'f9' && food.unit === 'g') qty = 30;
-        return `<div class="ingredient-row"><span class="ingredient-name">${food.name}</span><span class="ingredient-qty">${qty}${food.unit}</span></div>`;
+        return `<div class="ingredient-row"><span class="ingredient-name">${esc(food.name)}</span><span class="ingredient-qty">${qty}${food.unit}</span></div>`;
       }).join('');
       bodyHtml = `
         <div class="meal-macros">
@@ -3215,7 +3219,7 @@ function renderRecipes(filter = '') {
           const isFav = state.favorites.includes(r.id);
           return `<div class="recipe-card ${isFav?'favorite':''}" onclick="openRecipeDetail('${r.id}')">
             <div class="recipe-card-emoji">${r.emoji}</div>
-            <div class="recipe-card-name">${r.name}</div>
+            <div class="recipe-card-name">${esc(r.name)}</div>
             <div class="recipe-card-kcal">${m.kcal} kcal</div>
             <div class="recipe-card-meal">Π:${m.p}g | Υ:${m.c}g | Λ:${m.f}g</div>
             <button style="margin-top:6px;font-size:0.8rem;border:none;background:none;cursor:pointer" onclick="event.stopPropagation();toggleFavorite('${r.id}')">${isFav?'⭐':'☆'}</button>
@@ -3483,7 +3487,7 @@ function renderBuilderPage(typeFilter) {
       libHtml += `<div class="dplanner-meal-card ${sel ? 'selected-dp' : ''}" onclick="builderPageToggle('${r.id}',false)">
         <div class="dplanner-meal-emoji">${r.emoji}</div>
         <div class="dplanner-meal-info">
-          <div class="dplanner-meal-name">${r.name}</div>
+          <div class="dplanner-meal-name">${esc(r.name)}</div>
           <div class="dplanner-meal-meta">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div>
         </div>
         <div class="dplanner-meal-kcal">${m.kcal} kcal</div>
@@ -3987,7 +3991,7 @@ function renderBuilderRecipeList(typeFilter) {
       const inBuilder = builderMeals.find(x => x.id === r.id && !x.isStandard);
       html += `<div class="swap-row ${inBuilder?'selected-builder':''}" onclick="builderToggle('${r.id}',false)">
         <div class="swap-row-left"><span class="swap-emoji">${r.emoji}</span>
-          <div><div class="swap-name">${r.name}</div><div class="swap-items">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div></div>
+          <div><div class="swap-name">${esc(r.name)}</div><div class="swap-items">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div></div>
         </div>
         <div class="swap-kcal">${m.kcal}<span>kcal</span></div>
       </div>`;
@@ -4289,7 +4293,7 @@ function openRecipeDetail(rid) {
   const ingredientsHtml = recipe.ingredients.map(ing => {
     const food = allFoods.find(f => f.id === ing.foodId);
     if (!food) return '';
-    return `<div class="ingredient-row"><span class="ingredient-name">${food.name}</span><span class="ingredient-qty">${ing.qty}${food.unit}</span></div>`;
+    return `<div class="ingredient-row"><span class="ingredient-name">${esc(food.name)}</span><span class="ingredient-qty">${ing.qty}${food.unit}</span></div>`;
   }).join('');
 
   // Μετατροπή "\n" σε αριθμημένα βήματα
@@ -4309,7 +4313,7 @@ function openRecipeDetail(rid) {
   openModal(`
     <div class="modal-handle"></div>
     <div style="text-align:center;font-size:3rem;margin-bottom:8px">${recipe.emoji}</div>
-    <div class="modal-title" style="text-align:center">${recipe.name}</div>
+    <div class="modal-title" style="text-align:center">${esc(recipe.name)}</div>
     <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">
       <span class="chip chip-green">${m.kcal} kcal</span>
       <span class="chip chip-blue">Π: ${m.p}g</span>
@@ -4384,11 +4388,11 @@ function openSwapMeal(mi, dayIdx) {
     const m = calcRecipeMacros(r);
     return {
       key: 'rec:' + r.id,
-      html: `<div class="swap-row${r.id === currentId ? ' swap-row-selected' : ''}" data-name="${r.name.toLowerCase()}" data-id="${r.id}" data-isstd="0" data-kcal="${m.kcal}" data-p="${m.p}" data-c="${m.c}" data-f="${m.f}" onclick="_swapRowClick(this)">
+      html: `<div class="swap-row${r.id === currentId ? ' swap-row-selected' : ''}" data-name="${esc(r.name.toLowerCase())}" data-id="${r.id}" data-isstd="0" data-kcal="${m.kcal}" data-p="${m.p}" data-c="${m.c}" data-f="${m.f}" onclick="_swapRowClick(this)">
         <div class="swap-row-left">
           <span class="swap-emoji">${r.emoji}</span>
           <div>
-            <div class="swap-name">${r.name}</div>
+            <div class="swap-name">${esc(r.name)}</div>
             <div class="swap-items">Π:${m.p}g · Υ:${m.c}g · Λ:${m.f}g</div>
           </div>
         </div>
@@ -4444,7 +4448,7 @@ function _swapRowClick(el) {
 }
 
 const SF_MIN_VAL = 0.5, SF_MAX_VAL = 2.5;
-function _clampSF(v) { return Math.round(Math.min(SF_MAX_VAL, Math.max(SF_MIN_VAL, parseFloat(v) || 1)) * 100) / 100; }
+function _clampSF(v) { const n = parseFloat(v); return Math.round(Math.min(SF_MAX_VAL, Math.max(SF_MIN_VAL, isNaN(n) ? 1 : n)) * 100) / 100; }
 
 function _swapSfChange(val) {
   _swapPending.sf = _clampSF(val);
@@ -4590,7 +4594,7 @@ function openAddMealModal() {
     <div class="form-group">
       <label>Συνταγή</label>
       <select id="new-meal-recipe">
-        ${allRecipes.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
+        ${allRecipes.map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}
       </select>
     </div>
     <button class="btn btn-green btn-full" onclick="addMealFromModal()">➕ Προσθήκη</button>`);
@@ -4662,7 +4666,7 @@ function openAddRecipeModal() {
     </div>
     <div class="section-title">Υλικά (1ο)</div>
     <div style="display:flex;gap:8px">
-      <select id="nr-food1" style="flex:1">${allFoods.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select>
+      <select id="nr-food1" style="flex:1">${allFoods.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}</select>
       <input type="number" id="nr-qty1" placeholder="qty" style="width:70px" value="100">
     </div>
     <div style="margin-top:10px">
@@ -4773,7 +4777,7 @@ function renderBuilderModal() {
     ${builderMeals.map((rid,i) => {
       const r = allRecipes.find(x => x.id === rid);
       return r ? `<div class="food-row" style="cursor:default">
-        <span>${r.emoji} ${r.name}</span>
+        <span>${r.emoji} ${esc(r.name)}</span>
         <button class="btn btn-ghost btn-sm" onclick="builderRemove(${i})">✕</button>
       </div>` : '';
     }).join('') || '<p style="font-size:0.8rem;color:var(--text3);margin-bottom:8px">Δεν έχεις επιλέξει ακόμα.</p>'}
@@ -4783,7 +4787,7 @@ function renderBuilderModal() {
         const mac = calcRecipeMacros(r);
         return `<div class="recipe-card" onclick="builderAdd('${r.id}')">
           <div class="recipe-card-emoji">${r.emoji}</div>
-          <div class="recipe-card-name">${r.name}</div>
+          <div class="recipe-card-name">${esc(r.name)}</div>
           <div class="recipe-card-kcal">${mac.kcal} kcal</div>
         </div>`;
       }).join('')}
