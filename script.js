@@ -2397,8 +2397,7 @@ function renderToday() {
         <div class="macro-chip"><div class="macro-chip-val" style="color:#8b5cf6">${m.c > 0 ? m.c + 'g' : '—'}</div><div class="macro-chip-lbl">υδατ.</div></div>
         <div class="macro-chip"><div class="macro-chip-val" style="color:#f59e0b">${m.f > 0 ? m.f + 'g' : '—'}</div><div class="macro-chip-lbl">λίπος</div></div>
       </div>
-      ${sf !== 1 ? `<div style="font-size:0.7rem;color:var(--text3);margin:4px 0">📏 Μερίδα ×${sf}</div>` : ''}
-      <div style="font-size:0.7rem;color:var(--amber);background:var(--amber-bg);border-radius:6px;padding:4px 8px;margin:6px 0;display:inline-block">⭐ Στάνταρ γεύμα · εκτ. θερμίδες</div>`;
+      ${sf !== 1 ? `<div style="font-size:0.7rem;color:var(--text3);margin:4px 0">📏 Μερίδα ×${sf}</div>` : ''}`;
     } else {
       const allFoods = [...FOODS_DB, ...state.customFoods];
       const ingHtml = recipe.ingredients.map(ing => {
