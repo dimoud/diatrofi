@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
-const TO_EMAIL = 'info@expertease.eu';
+const TO_EMAIL = 'moudiotis.meng@gmail.com';
 const FROM_EMAIL = 'noreply@vivon.top'; // must be a verified sender domain in Resend
 
 serve(async (req) => {
