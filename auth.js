@@ -20,21 +20,24 @@
 
   // ── Bootstrap ─────────────────────────────────────────────
 
+  let _appInited = false;
+
   async function bootAuth() {
     renderAuthScreen();
 
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) {
       hideAuthScreen();
-      await initApp();
+      if (!_appInited) { _appInited = true; await initApp(); }
     }
 
     _supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         hideAuthScreen();
-        await initApp();
+        if (!_appInited) { _appInited = true; await initApp(); }
       }
       if (event === 'SIGNED_OUT') {
+        _appInited = false;
         showAuthScreen();
       }
       if (event === 'PASSWORD_RECOVERY') {

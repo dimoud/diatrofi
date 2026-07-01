@@ -3445,6 +3445,30 @@ function toggleSuppInfo(id) {
   if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
+let _suppActiveCat = 'all';
+
+function filterSupplements() {
+  const q = (document.getElementById('supp-search')?.value || '').toLowerCase().trim();
+  document.querySelectorAll('#supp-list .supp-item').forEach(el => {
+    const name = el.dataset.name || '';
+    const cat = el.dataset.cat || '';
+    const matchQ = !q || name.includes(q);
+    const matchCat = _suppActiveCat === 'all' || cat === _suppActiveCat;
+    el.style.display = matchQ && matchCat ? '' : 'none';
+  });
+}
+
+function filterSupplementsCat(cat) {
+  _suppActiveCat = cat;
+  document.querySelectorAll('#supp-cats button').forEach(btn => {
+    const active = btn.id === 'supp-cat-' + cat;
+    btn.style.borderColor = active ? 'var(--green)' : 'var(--border)';
+    btn.style.background = active ? 'var(--green-bg)' : 'var(--bg2)';
+    btn.style.color = active ? 'var(--green-d)' : 'var(--text2)';
+  });
+  filterSupplements();
+}
+
 function toggleFavorite(rid) {
   const idx = state.favorites.indexOf(rid);
   if (idx === -1) state.favorites.push(rid);
@@ -4869,23 +4893,39 @@ function renderSettingsSupplements() {
         </div>
       </div>
       ${enabled ? `
-      <div style="font-size:0.72rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Επίλεξε τα συμπληρώματά σου</div>
+      <div style="margin-bottom:12px">
+        <input type="text" id="supp-search" placeholder="Αναζήτηση συμπληρώματος…"
+          oninput="filterSupplements()"
+          style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;
+          font-size:0.9rem;font-family:inherit;background:var(--bg2);color:var(--text);
+          box-sizing:border-box;transition:border-color 0.15s;outline:none"
+          onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div id="supp-cats" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        ${[['all','Όλα'],['sport','💪 Αθλητική'],['health','❤️ Υγεία'],['wellness','🌿 Ευεξία'],['fatburn','🔥 Λιποδιάλυση'],['personal','⭐ Προσωπικά']].map(([cat,lbl]) =>
+          `<button id="supp-cat-${cat}" onclick="filterSupplementsCat('${cat}')"
+            style="padding:5px 12px;border-radius:20px;border:1.5px solid ${cat==='all'?'var(--green)':'var(--border)'};
+            background:${cat==='all'?'var(--green-bg)':'var(--bg2)'};cursor:pointer;
+            font-size:0.75rem;font-weight:600;color:${cat==='all'?'var(--green-d)':'var(--text2)'};
+            transition:all 0.15s">${lbl}</button>`
+        ).join('')}
+      </div>
+      <div id="supp-list">
       ${SUPPLEMENTS_LIBRARY.map(s => {
         const isActive = activeIds.includes(s.id);
-        return `<div class="card card-sm" style="margin-bottom:8px;padding:10px 14px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.88rem;font-weight:700">${s.name}</div>
-              <div style="font-size:0.7rem;color:var(--text3);margin-top:1px">${s.timing} · ${s.qty}</div>
-              <div style="font-size:0.68rem;margin-top:3px">${s.ideal}</div>
-            </div>
-            <label class="toggle-switch" style="flex-shrink:0">
-              <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleSuppActive('${s.id}')">
-              <span class="toggle-slider"></span>
-            </label>
+        return `<div class="card card-sm supp-item" data-cat="${s.category||'personal'}" data-name="${s.name.toLowerCase()}" style="margin-bottom:8px;padding:10px 14px;display:grid;grid-template-columns:1fr 52px;align-items:center;gap:10px">
+          <div style="min-width:0">
+            <div style="font-size:0.88rem;font-weight:700">${s.name}</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-top:1px">${s.timing} · ${s.qty}</div>
+            <div style="font-size:0.68rem;margin-top:3px">${s.ideal}</div>
           </div>
+          <label class="toggle-switch" style="justify-self:end;flex-shrink:0">
+            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleSuppActive('${s.id}')">
+            <span class="toggle-slider"></span>
+          </label>
         </div>`;
-      }).join('')}` : ''}
+      }).join('')}
+      </div>` : ''}
     </div>`;
 }
 
