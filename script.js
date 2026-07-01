@@ -4911,7 +4911,7 @@ function renderSettingsSupplements() {
         ).join('')}
       </div>
       <div id="supp-list">
-      ${SUPPLEMENTS_LIBRARY.map(s => {
+      ${[...SUPPLEMENTS_LIBRARY].sort((a,b) => a.name.localeCompare(b.name, 'el')).map(s => {
         const isActive = activeIds.includes(s.id);
         return `<div class="card card-sm supp-item" data-cat="${s.category||'personal'}" data-name="${s.name.toLowerCase()}" style="margin-bottom:8px;padding:10px 14px;display:grid;grid-template-columns:1fr 52px;align-items:center;gap:10px">
           <div style="min-width:0">
