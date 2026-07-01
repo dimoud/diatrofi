@@ -28,7 +28,7 @@ async function _checkRateLimit() {
     const remaining = Math.ceil((AI_COOLDOWN_MS - elapsed) / 1000);
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;
-    throw new Error(`Περίμενε ${mins}:${String(secs).padStart(2,'0')} λεπτά πριν την επόμενη βελτιστοποίηση`);
+    throw new Error(tFmt('ai_wait', { time: `${mins}:${String(secs).padStart(2,'0')}` }));
   }
 
   // Record the call before making the AI request — prevents double-calls if
@@ -117,15 +117,15 @@ async function _callGemini(prompt) {
   const data = await response.json();
   if (data.error) {
     const code = data.error.code;
-    if (code === 429) throw new Error('Το AI όριο χρήσης εξαντλήθηκε. Δοκίμασε αύριο ή αναβάθμισε το Gemini API plan.');
+    if (code === 429) throw new Error(t('ai_limit'));
     throw new Error(data.error.message || `Gemini error ${code}`);
   }
   const rawText = (data.candidates?.[0]?.content?.parts?.[0]?.text || '')
     .replace(/```json\s*/gi, '').replace(/```\s*/g, '');
   const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) throw new Error('Δεν βρέθηκε έγκυρο JSON στην απάντηση');
+  if (!jsonMatch) throw new Error(t('ai_json_error'));
   const result = JSON.parse(jsonMatch[0]);
-  if (!Array.isArray(result) || result.length !== 7) throw new Error('Αναμενόταν 7 ημέρες');
+  if (!Array.isArray(result) || result.length !== 7) throw new Error(t('ai_days_error'));
   return result;
 }
 
@@ -148,7 +148,7 @@ async function _callGeminiObject(prompt) {
   const rawText = (data.candidates?.[0]?.content?.parts?.[0]?.text || '')
     .replace(/```json\s*/gi, '').replace(/```\s*/g, '');
   const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Δεν βρέθηκε έγκυρο JSON στην απάντηση');
+  if (!jsonMatch) throw new Error(t('ai_json_error'));
   return JSON.parse(jsonMatch[0]);
 }
 
@@ -166,9 +166,9 @@ async function estimateFoodCaloriesWithAI(foodName, unit) {
     set('nf-p',    result.p    ?? 0);
     set('nf-c',    result.c    ?? 0);
     set('nf-f',    result.f    ?? 0);
-    showToast('✅ AI εκτίμηση θερμίδων!');
+    showToast(t('ai_estimate_ok'));
   } catch (e) {
-    showToast('❌ ' + (e.message || 'Σφάλμα AI'));
+    showToast('❌ ' + (e.message || t('toast_error')));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✨ AI'; }
   }
@@ -186,9 +186,9 @@ async function estimateRecipeCaloriesWithAI(recipeName) {
       const el = document.getElementById('nr-' + k);
       if (el) el.value = Math.round((result[k] ?? 0) * 10) / 10;
     });
-    showToast('✅ AI εκτίμηση θερμίδων!');
+    showToast(t('ai_estimate_ok'));
   } catch (e) {
-    showToast('❌ ' + (e.message || 'Σφάλμα AI'));
+    showToast('❌ ' + (e.message || t('toast_error')));
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✨ AI'; }
   }
@@ -220,7 +220,7 @@ async function optimizeWeekWithAI() {
     document.getElementById('ai-optimize-btn'),
     document.getElementById('ai-optimize-btn-settings'),
   ].filter(Boolean);
-  btns.forEach(b => { b.disabled = true; b.innerHTML = '⏳ Βελτιστοποίηση...'; });
+  btns.forEach(b => { b.disabled = true; b.innerHTML = t('ai_optimizing'); });
 
   try {
     await _checkRateLimit();
@@ -258,16 +258,16 @@ ${_FORMAT}`;
     _applyAIWeek(optimized);
     saveState();
     renderWeek();
-    showToast('✅ Το πλάνο βελτιστοποιήθηκε με AI!');
+    showToast(t('ai_optimize_ok'));
 
   } catch (e) {
     console.error('AI optimize error:', e);
-    showToast('❌ ' + (e.message || 'Σφάλμα AI'));
+    showToast('❌ ' + (e.message || t('toast_error')));
   } finally {
     const b1 = document.getElementById('ai-optimize-btn');
     const b2 = document.getElementById('ai-optimize-btn-settings');
     if (b1) { b1.disabled = false; b1.innerHTML = '✨ AI'; }
-    if (b2) { b2.disabled = false; b2.innerHTML = '✨ Βελτιστοποίηση με AI'; }
+    if (b2) { b2.disabled = false; b2.innerHTML = t('ai_optimize_btn'); }
   }
 }
 
@@ -275,7 +275,7 @@ ${_FORMAT}`;
 
 async function generateWeekWithAI() {
   const btn = document.getElementById('ai-generate-btn');
-  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Δημιουργία...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = t('ai_generating'); }
 
   try {
     await _checkRateLimit();
@@ -314,12 +314,12 @@ ${_FORMAT}`;
     state.programCreated = true;
     saveState();
     navigateTo('today');
-    showToast('✅ Το εβδομαδιαίο πλάνο δημιουργήθηκε επιτυχώς!', 4000);
+    showToast(t('ai_generate_ok'), 4000);
 
   } catch (e) {
     console.error('AI generate error:', e);
-    showToast('❌ ' + (e.message || 'Σφάλμα AI'));
+    showToast('❌ ' + (e.message || t('toast_error')));
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = '✨ Δημιουργία Πλάνου με AI'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = t('ai_generate_btn'); }
   }
 }

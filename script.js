@@ -2259,35 +2259,35 @@ function updateActivitySection() {
     <div class="card card-sm" style="padding:14px 16px;margin-bottom:10px">
       <div class="act-header" style="margin-bottom:14px">
         <span class="act-header-icon">🏃</span>
-        <span class="act-header-title">ΔΡΑΣΤΗΡΙΟΤΗΤΑ & ΕΛΛΕΙΜΜΑ</span>
+        <span class="act-header-title">${t('act_section_title')}</span>
       </div>
       <div class="act-inner-row">
         <div class="act-row-top">
           <div style="display:flex;align-items:center;gap:10px">
             <span class="act-icon-badge" style="background:#ede9fe">🏋️</span>
-            <span class="act-label">Προπόνηση</span>
+            <span class="act-label">${t('act_training')}</span>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" ${hasTraining ? 'checked' : ''} onchange="saveDayTraining(this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        ${hasTraining ? `<div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">~${trainingKcal} kcal σήμερα · 1h βαρά</div>` : ''}
+        ${hasTraining ? `<div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">${tFmt('act_training_kcal', { kcal: trainingKcal })}</div>` : ''}
       </div>
       <div class="act-divider"></div>
       <div class="act-inner-row">
         <div class="act-row-top">
           <div style="display:flex;align-items:center;gap:10px">
             <span class="act-icon-badge" style="background:#fef3c7">🔥</span>
-            <span class="act-label">Πρόσθετη βασική <span style="color:var(--text3);font-weight:500">(NEAT)</span></span>
+            <span class="act-label">${t('act_neat')} <span style="color:var(--text3);font-weight:500">(NEAT)</span></span>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" ${stepsDone ? 'checked' : ''} onchange="saveDayStepsDone(this.checked)">
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <div class="act-big-num" id="act-steps-display">${stepsCount.toLocaleString()} <span class="act-big-unit">βήματα</span></div>
-        ${stepsDone ? `<div id="act-steps-kcal" style="font-size:0.72rem;color:var(--text3);margin-bottom:6px">~${stepsKcal} kcal σήμερα · ~${weeklyStepsKcal} kcal/εβδ.</div>` : '<div id="act-steps-kcal" style="height:6px"></div>'}
+        <div class="act-big-num" id="act-steps-display">${stepsCount.toLocaleString()} <span class="act-big-unit">${t('act_steps_unit')}</span></div>
+        ${stepsDone ? `<div id="act-steps-kcal" style="font-size:0.72rem;color:var(--text3);margin-bottom:6px">${tFmt('act_steps_kcal_today', { kcal: stepsKcal, weekly: weeklyStepsKcal })}</div>` : '<div id="act-steps-kcal" style="height:6px"></div>'}
         <input type="range" id="act-steps-slider" min="1000" max="20000" step="500" value="${stepsCount}"
           class="act-slider"
           oninput="onStepsSliderInput(this.value)"
@@ -2299,7 +2299,7 @@ function updateActivitySection() {
       <div class="act-divider"></div>
       <div class="act-inner-row">
         <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px">
-          🔥 Σύνολο <strong>${totalBurn} kcal</strong> &nbsp;·&nbsp; BMR Κατανάλωση <strong>${consumed} kcal</strong>
+          ${tFmt('act_total_burn', { kcal: totalBurn, bmr: consumed })}
         </div>
         <div style="font-size:1.6rem;font-weight:900;color:${deficitColor}">${deficitPos ? '−' : '+'}${Math.abs(deficit)} kcal</div>
         <div style="font-size:0.82rem;font-weight:600;color:${deficitColor};margin-top:2px">${deficitPos ? t('deficit_label') : t('surplus_label')}</div>
@@ -2318,7 +2318,7 @@ function updateActivitySection() {
 function onStepsSliderInput(val) {
   const v = parseInt(val);
   const stepsEl = document.getElementById('act-steps-display');
-  if (stepsEl) stepsEl.innerHTML = v.toLocaleString() + ' <span class="act-big-unit">βήματα</span>';
+  if (stepsEl) stepsEl.innerHTML = v.toLocaleString() + ' <span class="act-big-unit">' + t('act_steps_unit') + '</span>';
 }
 
 function saveDayKcalGoal(val) {
@@ -2337,8 +2337,8 @@ function saveExtraKcal() {
   state.week[state.currentDay].extraKcal = val;
   saveState();
   renderToday();
-  if (val > 0) showToast(`🍕 +${val} kcal καταχωρήθηκαν`);
-  else showToast('✓ Extra kcal καθαρίστηκαν');
+  if (val > 0) showToast(tFmt('today_extra_added', { n: val }));
+  else showToast(t('today_extra_cleared'));
 }
 
 function clearPrevExtra(dayIdx) {
@@ -2509,7 +2509,7 @@ function renderToday() {
         </div>
         ${bodyHtml}
         ${meal.waterNote ? `<div class="water-note">💧 ${meal.waterNote}</div>` : ''}
-        <div class="running-kcal">Σύνολο ως τώρα: <strong>${runningKcal} kcal</strong></div>
+        <div class="running-kcal">${t('today_running_total')}: <strong>${runningKcal} kcal</strong></div>
         <div class="meal-actions">
           <button class="btn btn-ghost btn-sm" onclick="openSwapMeal(${mi})">🔄 Αλλαγή</button>
           <button class="btn btn-ghost btn-sm" onclick="openScaleModal(${mi})">⚖️ Ποσότητα</button>
@@ -2550,9 +2550,9 @@ function renderToday() {
       <!-- Kcal Hero -->
       <div class="kcal-hero fade-in">
         <div class="kcal-hero-left">
-          <h2>ΑΠΟΜΕΝΟΥΝ</h2>
-          <div class="big-num">${remaining.kcal} <span style="font-size:1rem;font-weight:600;opacity:0.75">kcal μέρας</span></div>
-          <div class="sub">kcal · Καταναλώθηκαν: ${doneMacros.kcal} / ${goals.kcal}</div>
+          <h2>${t('today_remaining')}</h2>
+          <div class="big-num">${remaining.kcal} <span style="font-size:1rem;font-weight:600;opacity:0.75">${t('today_kcal_day')}</span></div>
+          <div class="sub">kcal · ${t('today_consumed')}: ${doneMacros.kcal} / ${goals.kcal}</div>
         </div>
         <div class="kcal-ring">
           ${ring(kcalPct)}
@@ -2563,11 +2563,11 @@ function renderToday() {
       <!-- Kcal ημέρας override -->
       <div class="card card-sm fade-in" style="padding:8px 12px;margin-bottom:10px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:0.7rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.04em">🎯 Kcal ημέρας</span>
+          <span style="font-size:0.7rem;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.04em">🎯 ${t('today_kcal_day_goal')}</span>
           <div style="display:flex;align-items:center;gap:6px">
             <span id="day-kcal-display" style="font-size:0.88rem;font-weight:700;color:var(--text1)">${effectiveKcal}</span>
             ${day.kcalGoal
-              ? `<button class="btn btn-ghost btn-sm" onclick="saveDayKcalGoal(0)" style="font-size:0.68rem;padding:2px 6px" title="Επαναφορά default">↺</button>`
+              ? `<button class="btn btn-ghost btn-sm" onclick="saveDayKcalGoal(0)" style="font-size:0.68rem;padding:2px 6px" title="Reset">↺</button>`
               : `<span style="font-size:0.68rem;color:var(--text3)">default</span>`}
           </div>
         </div>
@@ -2605,42 +2605,42 @@ function renderToday() {
 
       <!-- Meals header + reset -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="section-title" style="margin:0">${day.label} — Γεύματα</div>
+        <div class="section-title" style="margin:0">${day.label} — ${t('today_meals_header')}</div>
         <div style="display:flex;gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="exportDayPDF(${state.currentDay})">🖨️</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetDayDone()" title="Μηδένισε τα checkboxes">↺ Reset</button>
-          <button class="btn btn-ghost btn-sm" onclick="resetDayMeals()" title="Επαναφορά γευμάτων στα default">🗑 Default</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetDayDone()">${t('today_reset_checks')}</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetDayMeals()">${t('today_reset_meals')}</button>
         </div>
       </div>
       ${mealsHtml}
 
       <!-- Add Meal Button -->
-      <button class="btn btn-ghost btn-full" style="margin-bottom:10px" onclick="openAddMealModal()">➕ Προσθήκη Γεύματος</button>
+      <button class="btn btn-ghost btn-full" style="margin-bottom:10px" onclick="openAddMealModal()">${t('today_add_meal')}</button>
 
       <!-- Macros Dashboard -->
       <div class="dashboard-grid fade-in" style="margin-bottom:10px">
         <div class="macro-card" style="padding:8px 10px">
-          <div class="macro-card-label" style="font-size:0.62rem">Πρωτεΐνη</div>
+          <div class="macro-card-label" style="font-size:0.62rem">${t('macro_protein')}</div>
           <div class="macro-card-value" style="color:#3b82f6;font-size:1.1rem;margin:2px 0">${doneMacros.p}g</div>
           <div class="macro-card-sub" style="font-size:0.62rem">${goals.protein}g · −${remaining.p}g</div>
           ${macroBar(doneMacros.p, goals.protein, '#3b82f6')}
         </div>
         <div class="macro-card" style="padding:8px 10px">
-          <div class="macro-card-label" style="font-size:0.62rem">Υδατάνθρακες</div>
+          <div class="macro-card-label" style="font-size:0.62rem">${t('macro_carbs')}</div>
           <div class="macro-card-value" style="color:#8b5cf6;font-size:1.1rem;margin:2px 0">${doneMacros.c}g</div>
           <div class="macro-card-sub" style="font-size:0.62rem">${goals.carbs}g · −${remaining.c}g</div>
           ${macroBar(doneMacros.c, goals.carbs, '#8b5cf6')}
         </div>
         <div class="macro-card" style="padding:8px 10px">
-          <div class="macro-card-label" style="font-size:0.62rem">Λίπος</div>
+          <div class="macro-card-label" style="font-size:0.62rem">${t('macro_fat')}</div>
           <div class="macro-card-value" style="color:#f59e0b;font-size:1.1rem;margin:2px 0">${doneMacros.f}g</div>
           <div class="macro-card-sub" style="font-size:0.62rem">${goals.fat}g · −${remaining.f}g</div>
           ${macroBar(doneMacros.f, goals.fat, '#f59e0b')}
         </div>
         <div class="macro-card" style="padding:8px 10px">
-          <div class="macro-card-label" style="font-size:0.62rem">Κατανάλωση</div>
+          <div class="macro-card-label" style="font-size:0.62rem">${t('today_consumed')}</div>
           <div class="macro-card-value" style="color:#22c55e;font-size:1.1rem;margin:2px 0">${doneMacros.kcal}</div>
-          <div class="macro-card-sub" style="font-size:0.62rem">kcal · ${day.meals.filter(m=>m.done).length}/${day.meals.length} γεύματα</div>
+          <div class="macro-card-sub" style="font-size:0.62rem">kcal · ${day.meals.filter(m=>m.done).length}/${day.meals.length} ${t('today_meals_header')}</div>
           ${macroBar(doneMacros.kcal, effectiveKcal, '#22c55e')}
         </div>
       </div>
@@ -2658,9 +2658,9 @@ function renderToday() {
             </div>`
           : '';
         return `<div class="card card-sm fade-in" style="margin-bottom:14px">
-          <div class="section-title">🍕 Επιπλέον Θερμίδες (εκτός πλάνου)</div>
+          <div class="section-title">${t('today_extra_kcal')}</div>
           ${reminderHtml}
-          <p style="font-size:0.8rem;color:var(--text2);margin-bottom:10px">Φάγατε κάτι παραπάνω; Καταγράψτε το εδώ. Η ημέρα θα κοκκινίσει στην Εβδομάδα.</p>
+          <p style="font-size:0.8rem;color:var(--text2);margin-bottom:10px">${t('today_extra_kcal_desc') || 'Φάγατε κάτι παραπάνω; Καταγράψτε το εδώ.'}</p>
           <div style="display:flex;gap:8px;align-items:center">
             <input type="number" id="extra-kcal-input" value="${extraKcal||''}" min="0" max="5000" step="50"
               placeholder="e.g. 400"
@@ -2669,7 +2669,7 @@ function renderToday() {
             <button class="btn btn-sm" style="background:${extraKcal>0?'#ef4444':'var(--green)'};color:#fff"
               onclick="saveExtraKcal()">💾</button>
           </div>
-          ${extraKcal > 0 ? `<div style="margin-top:8px;font-size:0.78rem;color:#ef4444;font-weight:700">Σύνολο ημέρας: ${dayMacros.kcal + extraKcal} kcal (+${extraKcal} εκτός πλάνου)</div>` : ''}
+          ${extraKcal > 0 ? `<div style="margin-top:8px;font-size:0.78rem;color:#ef4444;font-weight:700">${t('today_day_total')}: ${dayMacros.kcal + extraKcal} kcal (+${extraKcal} ${t('today_outside_plan')})</div>` : ''}
         </div>`;
       })()}
 
@@ -2679,13 +2679,13 @@ function renderToday() {
         if (!supp.enabled) return '';
         const activeIds = supp.activeIds || [];
         if (activeIds.length === 0) return `<div class="card fade-in" style="padding:14px 16px">
-          <div class="section-title" style="margin-bottom:6px">💊 Συμπληρώματα</div>
-          <div style="font-size:0.8rem;color:var(--text3)">Δεν έχεις επιλέξει συμπληρώματα. Πήγαινε στις <strong>Ρυθμίσεις → Συμπληρώματα</strong>.</div>
+          <div class="section-title" style="margin-bottom:6px">${t('suppl_section')}</div>
+          <div style="font-size:0.8rem;color:var(--text3)">${t('suppl_no_active')}</div>
         </div>`;
         const done = supp.done || {};
         const active = SUPPLEMENTS_LIBRARY.filter(s => activeIds.includes(s.id));
         return `<div class="card fade-in">
-          <div class="section-title" style="margin-bottom:10px">💊 Συμπληρώματα</div>
+          <div class="section-title" style="margin-bottom:10px">${t('suppl_section')}</div>
           ${active.map(s => {
             const isDone = !!done[s.id];
             return `<div class="supp-item">
@@ -2693,22 +2693,22 @@ function renderToday() {
               <div class="supp-info" style="flex:1;min-width:0">
                 <div style="display:flex;align-items:center;gap:6px">
                   <span class="supp-name">${s.name}</span>
-                  <span style="font-size:0.68rem;color:var(--text3);font-weight:600">${s.timing}</span>
+                  <span style="font-size:0.68rem;color:var(--text3);font-weight:600">${tName(s,'timing')}</span>
                 </div>
-                <div class="supp-note">${s.intake} · ${s.qty}</div>
+                <div class="supp-note">${tName(s,'intake')} · ${tName(s,'qty')}</div>
               </div>
               <button onclick="toggleSuppInfo('${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:1rem;padding:4px;flex-shrink:0">ℹ️</button>
             </div>
             <div id="supp-info-${s.id}" class="supp-guide" style="display:none">
-              <div class="supp-guide-row"><span class="supp-guide-label">Ιδανική ώρα</span><span>${s.timing}</span></div>
-              <div class="supp-guide-row"><span class="supp-guide-label">Τρόπος</span><span>${s.intake}</span></div>
-              <div class="supp-guide-row"><span class="supp-guide-label">✅ Βελτιώνει</span><span>${s.boosts}</span></div>
-              <div class="supp-guide-row"><span class="supp-guide-label">⚠️ Μειώνει</span><span>${s.reduces}</span></div>
-              <div class="supp-guide-row"><span class="supp-guide-label">🚫 Αποφύγετε</span><span>${s.avoid}</span></div>
-              <div class="supp-guide-row"><span class="supp-guide-label">☕ Καφές/Τσάι</span><span>${s.drinks}</span></div>
-              ${s.gap !== '—' ? `<div class="supp-guide-row"><span class="supp-guide-label">⏱ Απόσταση</span><span>${s.gap}</span></div>` : ''}
-              <div class="supp-guide-tip">${s.tip}</div>
-              <div style="margin-top:6px;font-size:0.65rem;color:var(--text3)">Τεκμηρίωση: <strong>${s.evidence}</strong> · ${s.ideal}</div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_timing')}</span><span>${tName(s,'timing')}</span></div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_intake')}</span><span>${tName(s,'intake')}</span></div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_boosts')}</span><span>${tName(s,'boosts')}</span></div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_reduces')}</span><span>${tName(s,'reduces')}</span></div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_avoid')}</span><span>${tName(s,'avoid')}</span></div>
+              <div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_drinks')}</span><span>${tName(s,'drinks')}</span></div>
+              ${(tName(s,'gap') || s.gap) !== '—' ? `<div class="supp-guide-row"><span class="supp-guide-label">${t('suppl_guide_gap')}</span><span>${tName(s,'gap')}</span></div>` : ''}
+              <div class="supp-guide-tip">${tName(s,'tip')}</div>
+              <div style="margin-top:6px;font-size:0.65rem;color:var(--text3)">${t('suppl_evidence_label')}: <strong>${tName(s,'evidence')}</strong> · ${tName(s,'ideal')}</div>
             </div>`;
           }).join('')}
         </div>`;
@@ -2768,7 +2768,7 @@ function renderWeek() {
         stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
         transform="rotate(-90 65 65)"/>
       <text x="65" y="60" text-anchor="middle" font-size="20" font-weight="800" fill="${color}">${pct}%</text>
-      <text x="65" y="78" text-anchor="middle" font-size="9" fill="#9ca3af">Μέση πρόσληψη</text>
+      <text x="65" y="78" text-anchor="middle" font-size="9" fill="#9ca3af">${t('stats_avg_intake_svg')}</text>
     </svg>`;
   }
 
@@ -2898,8 +2898,8 @@ function renderWeek() {
       <!-- Header -->
       <div class="week-page-header">
         <div>
-          <h1 style="font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:4px">Εβδομαδιαίο Πρόγραμμα</h1>
-          <div style="font-size:0.78rem;color:var(--text3)">7 ημέρες · <strong style="color:var(--text2)">${avgKcal.toLocaleString()} kcal/ημέρα</strong></div>
+          <h1 style="font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:4px">${t('week_title')}</h1>
+          <div style="font-size:0.78rem;color:var(--text3)">${tFmt('week_days_kcal', { kcal: avgKcal.toLocaleString() })}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
           <div style="display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:10px;padding:4px 8px;border:1px solid var(--border)">
@@ -2913,13 +2913,13 @@ function renderWeek() {
               style="display:flex;align-items:center;gap:5px;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap"
               onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background=this.dataset.active==='1'?'var(--green)':'#3b82f6'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              <span class="week-btn-label">Ξανά</span>
+              <span class="week-btn-label">${t('week_regen')}</span>
             </button>
-            <button onclick="resetWeekPlan()" title="Επαναφορά προεπιλογών"
+            <button onclick="resetWeekPlan()" title="${t('week_reset')}"
               style="display:flex;align-items:center;gap:5px;background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 10px;font-size:0.78rem;font-weight:700;color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap"
               onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
-              <span class="week-btn-label">Επαναφορά</span>
+              <span class="week-btn-label">${t('week_reset')}</span>
             </button>
             <button class="btn btn-ghost btn-sm" onclick="exportPDF()" title="PDF">🖨️ <span class="week-btn-label">PDF</span></button>
             <button class="btn btn-ghost btn-sm" onclick="copyDay()" title="Αντιγραφή">📋</button>
@@ -2933,20 +2933,20 @@ function renderWeek() {
           <!-- Gauge -->
           <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
             ${weekGauge(avgPct)}
-            <div style="font-size:0.8rem;font-weight:800;color:var(--text);margin-top:2px">Μέση πρόσληψη</div>
+            <div style="font-size:0.8rem;font-weight:800;color:var(--text);margin-top:2px">${t('week_avg_intake')}</div>
             <div style="font-size:1.1rem;font-weight:900;color:var(--text)">${avgKcal.toLocaleString()} kcal</div>
-            <div style="font-size:0.72rem;color:var(--text3)">Στόχος: ${goalKcal.toLocaleString()} kcal</div>
+            <div style="font-size:0.72rem;color:var(--text3)">${t('stats_goal')}: ${goalKcal.toLocaleString()} kcal</div>
           </div>
           <!-- Macros -->
           <div style="flex:1;min-width:200px">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">Μακροθρεπτικά (μέσος όρος)</div>
+            <div style="font-size:0.75rem;font-weight:800;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em">${t('week_macros_avg')}</div>
             ${macroRow(t('macro_protein'), avgP, state.goals.protein || 160, '#3b82f6')}
             ${macroRow(t('macro_carbs'),   avgC, state.goals.carbs || 200,   '#8b5cf6')}
             ${macroRow(t('macro_fat'),     avgF, state.goals.fat || 60,     '#f59e0b')}
           </div>
           <!-- Balance -->
           <div style="background:${bal.bg};border-radius:12px;padding:14px 18px;min-width:160px;text-align:center;border:1px solid ${bal.color}33;display:flex;flex-direction:column;align-items:center;gap:6px">
-            <div style="font-size:0.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">Ισορροπία εβδομάδας</div>
+            <div style="font-size:0.65rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em">${t('week_balance_title')}</div>
             <svg width="60" height="60" viewBox="0 0 60 60">
               <circle cx="30" cy="30" r="${balArcR}" fill="none" stroke="var(--border)" stroke-width="5"/>
               <circle cx="30" cy="30" r="${balArcR}" fill="none" stroke="${bal.color}" stroke-width="5"
@@ -3077,27 +3077,27 @@ function renderWeek() {
         <div class="week-footer-grid" style="background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);border:1px solid var(--border)">
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">🔥</div>
-            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">Σύνολο εβδομάδας</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">${t('week_total')}</div>
             <div style="font-size:1rem;font-weight:900;color:var(--text)">${totalKcal.toLocaleString()} kcal</div>
-            <div style="font-size:0.65rem;color:var(--text3)">Μέσ. ${avgKcal.toLocaleString()} kcal/ημέρα</div>
+            <div style="font-size:0.65rem;color:var(--text3)">${tFmt('week_avg_kcal_day', { kcal: avgKcal.toLocaleString() })}</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">🌿</div>
-            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">Ποικιλία τροφών</div>
-            <div style="font-size:1rem;font-weight:900;color:var(--text)">${uniqueFoods.size} διαφ. τρόφιμα</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">${t('week_food_variety')}</div>
+            <div style="font-size:1rem;font-weight:900;color:var(--text)">${tFmt('week_food_variety_count', { n: uniqueFoods.size })}</div>
             <div style="font-size:0.65rem;color:${uniqueFoods.size >= 30 ? '#22c55e' : '#f59e0b'}">${uniqueFoods.size >= 30 ? t('diversity_great') : t('diversity_more')}</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">💧</div>
-            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">Ενυδάτωση</div>
-            <div style="font-size:1rem;font-weight:900;color:var(--text)">${(state.profile.weight * 0.035).toFixed(1)}L νερό</div>
-            <div style="font-size:0.65rem;color:var(--text3)">Στόχος: ${Math.round(state.profile.weight * 35)}ml/ημέρα</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">${t('week_hydration')}</div>
+            <div style="font-size:1rem;font-weight:900;color:var(--text)">${(state.profile.weight * 0.035).toFixed(1)}L</div>
+            <div style="font-size:0.65rem;color:var(--text3)">${tFmt('week_hydration_goal', { ml: Math.round(state.profile.weight * 35) })}</div>
           </div>
           <div style="text-align:center">
             <div style="font-size:1.3rem;margin-bottom:2px">🎯</div>
-            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">Πρόοδος στόχου</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-bottom:2px">${t('week_goal_progress')}</div>
             <div style="font-size:1rem;font-weight:900;color:${parseFloat(weightChange) <= 0 ? '#22c55e' : '#ef4444'}">${parseFloat(weightChange) > 0 ? '+' : ''}${weightChange} kg</div>
-            <div style="font-size:0.65rem;color:var(--text3)">Αυτή την εβδομάδα</div>
+            <div style="font-size:0.65rem;color:var(--text3)">${t('week_this_week')}</div>
           </div>
         </div>
       </div>
@@ -3129,8 +3129,8 @@ function regeneratePlan() {
   const cur = state.wizardStyle || 'simple';
   openModal(`
     <div class="modal-handle"></div>
-    <div class="modal-title">🔄 Δημιούργησε Ξανά</div>
-    <p style="font-size:0.83rem;color:var(--text2);margin-bottom:14px">Επίλεξε στυλ και δημιούργησε νέο τυχαίο πρόγραμμα με βάση τις προτιμήσεις σου.</p>
+    <div class="modal-title">${t('week_regen_title')}</div>
+    <p style="font-size:0.83rem;color:var(--text2);margin-bottom:14px">${t('week_regen_desc')}</p>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
       ${[['simple','🥗',t('wizard_simple_title'),t('wizard_simple_sub').substring(0,40)],
          ['mixed','🍲',t('wizard_mixed_title'),t('wizard_mixed_sub').substring(0,40)],
@@ -3142,8 +3142,8 @@ function regeneratePlan() {
         </div>`).join('')}
     </div>
     <div style="display:flex;gap:10px">
-      <button onclick="closeModal()" class="btn btn-ghost" style="flex:1">Άκυρο</button>
-      <button onclick="confirmRegenerate()" class="btn btn-green" style="flex:1">🎲 Δημιουργία</button>
+      <button onclick="closeModal()" class="btn btn-ghost" style="flex:1">${t('btn_cancel')}</button>
+      <button onclick="confirmRegenerate()" class="btn btn-green" style="flex:1">${t('week_regen_btn')}</button>
     </div>
   `);
   window._tmpRgStyle = cur;
@@ -3163,14 +3163,13 @@ function confirmRegenerate() {
 function resetWeekPlan() {
   openModal(`
     <div class="modal-handle"></div>
-    <div class="modal-title">🔄 Επαναφορά πλάνου</div>
+    <div class="modal-title">${t('week_reset_title')}</div>
     <p style="font-size:0.85rem;color:var(--text2);line-height:1.6;margin-bottom:20px">
-      Θέλεις σίγουρα να επαναφέρεις <strong>ολόκληρο</strong> το εβδομαδιαίο πλάνο στις προεπιλογές;<br>
-      <span style="color:#ef4444;font-weight:700">Όλες οι αλλαγές θα χαθούν.</span>
+      ${t('week_reset_desc')}
     </p>
     <div style="display:flex;gap:10px">
-      <button onclick="closeModal()" class="btn btn-ghost" style="flex:1">Άκυρο</button>
-      <button onclick="confirmResetWeekPlan()" class="btn" style="flex:1;background:#ef4444;color:#fff;border:none">Επαναφορά</button>
+      <button onclick="closeModal()" class="btn btn-ghost" style="flex:1">${t('btn_cancel')}</button>
+      <button onclick="confirmResetWeekPlan()" class="btn" style="flex:1;background:#ef4444;color:#fff;border:none">${t('week_reset_btn')}</button>
     </div>
   `);
 }
@@ -3179,7 +3178,7 @@ function confirmResetWeekPlan() {
   state.week = JSON.parse(JSON.stringify(DEFAULT_WEEK));
   saveState();
   renderWeek();
-  showToast('✅ Εβδομαδιαίο πλάνο επαναφέρθηκε στις προεπιλογές');
+  showToast(t('week_reset_done'));
 }
 
 // ── PAGE: RECIPES ──
@@ -3326,7 +3325,7 @@ function renderOptimize() {
           Αναλύει το τρέχον πλάνο και αναδιατάσσει τα γεύματα ώστε να αποφύγει επαναλήψεις (π.χ. γιαούρτι πρωί <em>και</em> βράδυ) και να μεγιστοποιήσει την ποικιλία.
         </div>
         <button id="ai-optimize-btn-settings" class="btn btn-green" style="width:100%;font-size:0.95rem;font-weight:800;padding:12px" onclick="optimizeWeekWithAI()">
-          ✨ Βελτιστοποίηση με AI
+          ${t('builder_optimize_ai')}
         </button>
       </div>
 
@@ -3334,7 +3333,7 @@ function renderOptimize() {
       <div class="card card-lg fade-in">
         <div class="section-title">🤖 Αυτόματη Κλιμάκωση</div>
         <div class="mode-tabs">
-          <button class="mode-tab ${state.optimizeMode===1?'active':''}" onclick="setMode(1)">Mode 1<br><span style="font-size:0.65rem;font-weight:400">Max Πρωτεΐνη</span></button>
+          <button class="mode-tab ${state.optimizeMode===1?'active':''}" onclick="setMode(1)">${t('optimize_mode1')}<br><span style="font-size:0.65rem;font-weight:400">${t('builder_mode1_label')}</span></button>
           <button class="mode-tab ${state.optimizeMode===2?'active':''}" onclick="setMode(2)">Mode 2<br><span style="font-size:0.65rem;font-weight:400">Νέος Στόχος kcal</span></button>
           <button class="mode-tab ${state.optimizeMode===3?'active':''}" onclick="setMode(3)">Mode 3<br><span style="font-size:0.65rem;font-weight:400">Custom Macros</span></button>
         </div>
@@ -3419,7 +3418,7 @@ function optimizeSingleDay(dayIdx) {
 function runOptimize(allDays = false) {
   if (allDays) {
     state.week.forEach((_, i) => optimizeSingleDay(i));
-    showToast('✅ Εφαρμόστηκε σε όλες τις ημέρες!');
+    showToast(t('week_applied_all'));
   } else {
     optimizeSingleDay(state.currentDay);
     showToast(`✅ Ημέρα ${state.currentDay+1} βελτιστοποιήθηκε`);
@@ -3697,7 +3696,7 @@ function renderBuilderPage(typeFilter) {
       ${(state._builderSavedDays && state._builderSavedDays.length > 0) ? `
       <button class="dplanner-btn-apply" onclick="builderConfirmApply('${typeFilter}')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Εφαρμογή στο πρόγραμμα (${state._builderSavedDays.length} ημέρες)
+        ${tFmt('builder_apply_days', { n: state._builderSavedDays.length })}
       </button>` : ''}
     </div>
 
@@ -3808,7 +3807,7 @@ function renderBuilderPage(typeFilter) {
             <div class="section-title" style="margin-bottom:8px">Ενέργεια & Στόχοι</div>
             <div class="dplanner-stat">
               <div class="dplanner-stat-row"><span>🔥 Συνολικές θερμίδες</span><strong>${totalKcal} / ${goals.kcal} kcal</strong></div>
-              <div class="dplanner-stat-row"><span>🍽️ Γεύματα επιλεγμένα</span><strong>${builderMeals.length}</strong></div>
+              <div class="dplanner-stat-row"><span>${t('builder_meals_selected')}</span><strong>${builderMeals.length}</strong></div>
               <div class="dplanner-stat-row"><span>💧 Ενυδάτωση (στόχος 3L)</span><strong style="color:var(--blue)">— / 3L</strong></div>
               <div class="dplanner-stat-row"><span>⭐ Βαθμολογία πλάνου</span><strong>${score.toFixed(1)} / 10</strong></div>
             </div>
@@ -4848,7 +4847,7 @@ function resetDayMeals() {
   state.week[state.currentDay].meals = JSON.parse(JSON.stringify(DEFAULT_WEEK[state.currentDay].meals));
   saveState();
   _refreshAfterMealEdit(state.currentDay);
-  showToast('✅ Ημέρα επαναφέρθηκε στα default');
+  showToast(t('day_reset_ok'));
 }
 
 // ── COPY DAY ──
@@ -4932,7 +4931,7 @@ function exportDayPDF(dayIdx) {
   }).join('');
 
   const extraRow = extraKcal > 0
-    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:6px 8px;font-size:9px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
+    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:6px 8px;font-size:9px;color:#ef4444;font-weight:700">${tFmt('pdf_extra_kcal', { n: extraKcal })}</td></tr>`
     : '';
 
   const html = `<style>@page { size: A4 portrait; margin: 0; }</style>
@@ -4940,12 +4939,12 @@ function exportDayPDF(dayIdx) {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:3px solid #22c55e">
         <div>
           <div style="font-size:17px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
-          <div style="font-size:10px;color:#6b7280;margin-top:2px">Στόχος: ${g.kcal} kcal · Πλάνο: ${tot.kcal} kcal (${pct}%) · ${p.name||'Vivon'}</div>
+          <div style="font-size:10px;color:#6b7280;margin-top:2px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%) · ${p.name||'Vivon'}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:11px;font-weight:700;color:#3b82f6">Πρωτεΐνη: ${tot.p}g</div>
-          <div style="font-size:11px;font-weight:700;color:#8b5cf6">Υδατάνθρακες: ${tot.c}g</div>
-          <div style="font-size:11px;font-weight:700;color:#f59e0b">Λίπος: ${tot.f}g</div>
+          <div style="font-size:11px;font-weight:700;color:#3b82f6">${t('macro_protein')}: ${tot.p}g</div>
+          <div style="font-size:11px;font-weight:700;color:#8b5cf6">${t('macro_carbs')}: ${tot.c}g</div>
+          <div style="font-size:11px;font-weight:700;color:#f59e0b">${t('macro_fat')}: ${tot.f}g</div>
         </div>
       </div>
       <div style="height:6px;background:#e5e7eb;border-radius:3px;margin-bottom:12px">
@@ -5057,7 +5056,7 @@ function exportPDF_today() {
   }).join('');
 
   const extraRow = extraKcal > 0
-    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:8px 10px;font-size:10px;color:#ef4444;font-weight:700">⚠️ Επιπλέον εκτός πλάνου: +${extraKcal} kcal</td></tr>`
+    ? `<tr style="background:#fef2f2"><td colspan="5" style="padding:8px 10px;font-size:10px;color:#ef4444;font-weight:700">${tFmt('pdf_extra_kcal', { n: extraKcal })}</td></tr>`
     : '';
 
   const pv = document.getElementById('print-view');
@@ -5069,13 +5068,13 @@ function exportPDF_today() {
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:3px solid #22c55e">
         <div>
           <div style="font-size:22px;font-weight:900;color:#111">${day.label}${dateLabel}</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:3px">Στόχος: ${g.kcal} kcal · Πλάνο: ${tot.kcal} kcal (${pct}%)</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:3px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%)</div>
         </div>
         <div style="text-align:right">
           <div style="font-size:18px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;margin-bottom:4px">VIVON</div>
-          <div style="font-size:13px;font-weight:700;color:#3b82f6">Πρωτεΐνη: ${tot.p}g</div>
-          <div style="font-size:13px;font-weight:700;color:#8b5cf6">Υδατάνθρακες: ${tot.c}g</div>
-          <div style="font-size:13px;font-weight:700;color:#f59e0b">Λίπος: ${tot.f}g</div>
+          <div style="font-size:13px;font-weight:700;color:#3b82f6">${t('macro_protein')}: ${tot.p}g</div>
+          <div style="font-size:13px;font-weight:700;color:#8b5cf6">${t('macro_carbs')}: ${tot.c}g</div>
+          <div style="font-size:13px;font-weight:700;color:#f59e0b">${t('macro_fat')}: ${tot.f}g</div>
         </div>
       </div>
       <div style="height:7px;background:#e5e7eb;border-radius:3px;margin-bottom:14px">
@@ -5166,14 +5165,14 @@ function exportPDF_stats() {
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
         <div style="background:#eff6ff;border-radius:10px;padding:12px 14px;text-align:center">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Μ.Ό. Kcal/ημέρα</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('stats_avg_kcal_day')}</div>
           <div style="font-size:22px;font-weight:900;color:#22c55e">${avgKcal.toLocaleString()}</div>
-          <div style="font-size:10px;color:#9ca3af">Στόχος ${g.kcal||'—'}</div>
+          <div style="font-size:10px;color:#9ca3af">${t('stats_goal')} ${g.kcal||'—'}</div>
         </div>
         <div style="background:#eff6ff;border-radius:10px;padding:12px 14px;text-align:center">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Μ.Ό. Πρωτεΐνη</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('stats_avg_protein')}</div>
           <div style="font-size:22px;font-weight:900;color:#3b82f6">${avgP}g</div>
-          <div style="font-size:10px;color:#9ca3af">Στόχος ${g.protein||'—'}g</div>
+          <div style="font-size:10px;color:#9ca3af">${t('stats_goal')} ${g.protein||'—'}g</div>
         </div>
         <div style="background:${totalDeficit>0?'#f0fdf4':'#fef2f2'};border-radius:10px;padding:12px 14px;text-align:center">
           <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Εβδ. Ισοζύγιο</div>
@@ -5183,10 +5182,10 @@ function exportPDF_stats() {
       </div>
 
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:18px">
-        <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:12px">Μέσος Όρος Μακροθρεπτικών</div>
-        ${barRow('🥩 Πρωτεΐνη', avgP, g.protein||180, '#3b82f6')}
-        ${barRow('🍚 Υδατάνθρακες', avgC, g.carbs||200, '#f59e0b')}
-        ${barRow('🫒 Λίπη', avgF, g.fat||60, '#8b5cf6')}
+        <div style="font-size:13px;font-weight:800;color:#111;margin-bottom:12px">${t('stats_macros_avg')}</div>
+        ${barRow(t('macro_protein_abbr'), avgP, g.protein||180, '#3b82f6')}
+        ${barRow(t('macro_carbs_abbr'), avgC, g.carbs||200, '#f59e0b')}
+        ${barRow(t('macro_fat_abbr'), avgF, g.fat||60, '#8b5cf6')}
       </div>
 
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:18px">
@@ -5210,7 +5209,7 @@ function exportPDF_stats() {
         <div style="background:#ecfeff;border-radius:10px;padding:12px 14px;text-align:center">
           <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Βήματα (εβδ. kcal)</div>
           <div style="font-size:20px;font-weight:900;color:#06b6d4">${totalStepsKcal}</div>
-          <div style="font-size:10px;color:#9ca3af">${stepsDoneDays}/7 ημέρες ✅</div>
+          <div style="font-size:10px;color:#9ca3af">${tFmt('stats_days_steps', { n: stepsDoneDays })}</div>
         </div>
         <div style="background:#f5f3ff;border-radius:10px;padding:12px 14px;text-align:center">
           <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Γυμναστήριο (kcal)</div>
@@ -5441,8 +5440,8 @@ function exportPDF_week() {
     <div style="padding:5mm 5mm 4mm;font-family:'Helvetica Neue',Arial,sans-serif;background:#f8fafc;">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid #e5e7eb">
         <div>
-          <div style="font-size:18px;font-weight:900;color:#111;letter-spacing:-0.5px">Εβδομαδιαίο Πρόγραμμα</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:1px">7 ημέρες · <strong style="color:#374151">${avgKcalW.toLocaleString()} kcal/ημέρα</strong> κατά μέσο όρο</div>
+          <div style="font-size:18px;font-weight:900;color:#111;letter-spacing:-0.5px">${t('pdf_week_title')}</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:1px">${tFmt('pdf_week_subtitle', { kcal: avgKcalW.toLocaleString() })}</div>
         </div>
         <div style="text-align:right">
           ${weekRangePrint ? `<div style="font-size:8px;color:#6b7280">${weekRangePrint}</div>` : ''}
@@ -5453,20 +5452,20 @@ function exportPDF_week() {
       <div style="display:flex;align-items:stretch;gap:8px;margin-bottom:6px;background:#fff;border-radius:8px;padding:6px 10px;border:1px solid #e5e7eb">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;min-width:76px">
           ${printGauge(avgPctW, 66)}
-          <div style="font-size:7px;font-weight:800;color:#111;margin-top:2px">Μέση πρόσληψη</div>
+          <div style="font-size:7px;font-weight:800;color:#111;margin-top:2px">${t('week_avg_intake')}</div>
           <div style="font-size:10px;font-weight:900;color:#111">${avgKcalW.toLocaleString()} kcal</div>
-          <div style="font-size:6.5px;color:#9ca3af">Στόχος: ${g.kcal.toLocaleString()} kcal</div>
+          <div style="font-size:6.5px;color:#9ca3af">${t('stats_goal')}: ${g.kcal.toLocaleString()} kcal</div>
         </div>
         <div style="width:1px;background:#f3f4f6;flex-shrink:0"></div>
         <div style="flex:1;padding:0 5px">
-          <div style="font-size:7px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">Μακροθρεπτικά (μέσος όρος)</div>
+          <div style="font-size:7px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px">${t('week_macros_avg')}</div>
           ${printMacroBar(t('macro_protein'), avgPW, g.protein || 160, '#3b82f6')}
           ${printMacroBar(t('macro_carbs'),   avgCW, g.carbs || 200,   '#8b5cf6')}
           ${printMacroBar(t('macro_fat'),     avgFW, g.fat || 60,     '#f59e0b')}
         </div>
         <div style="width:1px;background:#f3f4f6;flex-shrink:0"></div>
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:95px;text-align:center">
-          <div style="font-size:7px;font-weight:800;color:${balColor};text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px">Ισορροπία εβδομάδας</div>
+          <div style="font-size:7px;font-weight:800;color:${balColor};text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px">${t('week_balance_title')}</div>
           <div style="font-size:18px;margin-bottom:3px">${balEmoji}</div>
           <div style="font-size:8px;font-weight:800;color:${balColor}">${balLabel}</div>
           <div style="font-size:6.5px;color:#9ca3af;margin-top:1px">${balSub}</div>
@@ -5478,25 +5477,25 @@ function exportPDF_week() {
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
         <div style="background:#fff;border-radius:6px;border:1px solid #e5e7eb;padding:6px 8px;text-align:center">
           <div style="font-size:12px;margin-bottom:1px">🔥</div>
-          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">Σύνολο εβδομάδας</div>
+          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">${t('pdf_week_total')}</div>
           <div style="font-size:10px;font-weight:900;color:#111">${totalKcalW.toLocaleString()} kcal</div>
-          <div style="font-size:6.5px;color:#9ca3af">Μέσ. ${avgKcalW.toLocaleString()} kcal/ημ.</div>
+          <div style="font-size:6.5px;color:#9ca3af">${tFmt('week_avg_kcal_day', { kcal: avgKcalW.toLocaleString() })}</div>
         </div>
         <div style="background:#fff;border-radius:6px;border:1px solid #e5e7eb;padding:6px 8px;text-align:center">
           <div style="font-size:12px;margin-bottom:1px">🌿</div>
-          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">Ποικιλία τροφών</div>
-          <div style="font-size:10px;font-weight:900;color:#111">${uniqueFoodsW.size} διαφ. τρόφιμα</div>
+          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">${t('week_food_variety')}</div>
+          <div style="font-size:10px;font-weight:900;color:#111">${tFmt('week_food_variety_count', { n: uniqueFoodsW.size })}</div>
           <div style="font-size:6.5px;color:${uniqueFoodsW.size >= 30 ? '#22c55e' : '#f59e0b'}">${uniqueFoodsW.size >= 30 ? t('diversity_great') : t('diversity_more')}</div>
         </div>
         <div style="background:#fff;border-radius:6px;border:1px solid #e5e7eb;padding:6px 8px;text-align:center">
           <div style="font-size:12px;margin-bottom:1px">💧</div>
-          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">Ενυδάτωση</div>
-          <div style="font-size:10px;font-weight:900;color:#111">${(state.profile.weight * 0.035).toFixed(1)}L νερό</div>
-          <div style="font-size:6.5px;color:#9ca3af">Στόχος: ${Math.round(state.profile.weight * 35)}ml/ημ.</div>
+          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">${t('week_hydration')}</div>
+          <div style="font-size:10px;font-weight:900;color:#111">${(state.profile.weight * 0.035).toFixed(1)}L</div>
+          <div style="font-size:6.5px;color:#9ca3af">${tFmt('week_hydration_goal', { ml: Math.round(state.profile.weight * 35) })}</div>
         </div>
         <div style="background:#fff;border-radius:6px;border:1px solid #e5e7eb;padding:6px 8px;text-align:center">
           <div style="font-size:12px;margin-bottom:1px">🎯</div>
-          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">Πρόοδος στόχου</div>
+          <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">${t('week_goal_progress')}</div>
           <div style="font-size:10px;font-weight:900;color:${parseFloat(weightChangeW) <= 0 ? '#22c55e' : '#ef4444'}">${parseFloat(weightChangeW) > 0 ? '+' : ''}${weightChangeW} kg</div>
           <div style="font-size:6.5px;color:#9ca3af">Αυτή την εβδομάδα</div>
         </div>
@@ -5651,27 +5650,27 @@ function renderStatsPage() {
       <!-- Summary cards -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
         <div class="macro-card">
-          <div class="macro-card-label">Μ.Ό. Kcal/ημ</div>
+          <div class="macro-card-label">${t('stats_avg_kcal_short')}</div>
           <div class="macro-card-value" style="color:var(--green-d)">${avgKcal}</div>
-          <div class="macro-card-sub">Στόχος ${goals.kcal || '—'}</div>
+          <div class="macro-card-sub">${t('stats_goal')} ${goals.kcal || '—'}</div>
         </div>
         <div class="macro-card">
-          <div class="macro-card-label">Μ.Ό. Πρωτεΐνη</div>
+          <div class="macro-card-label">${t('stats_avg_protein')}</div>
           <div class="macro-card-value" style="color:var(--blue)">${avgP}g</div>
-          <div class="macro-card-sub">Στόχος ${goals.protein || '—'}g</div>
+          <div class="macro-card-sub">${t('stats_goal')} ${goals.protein || '—'}g</div>
         </div>
         <div class="macro-card">
-          <div class="macro-card-label">Εβδ. Ισοζύγιο</div>
+          <div class="macro-card-label">${t('stats_week_deficit')}</div>
           <div class="macro-card-value" style="color:${totalDeficit>0?'var(--green-d)':'var(--red)'}">${Math.abs(Math.round(totalDeficit))}</div>
-          <div class="macro-card-sub">${totalDeficit>0?'kcal έλλειμμα':'kcal πλεόνασμα'}</div>
+          <div class="macro-card-sub">${totalDeficit>0?t('stats_deficit_kcal'):t('stats_surplus_kcal')}</div>
         </div>
       </div>
 
       <!-- Kcal bar chart -->
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <h3>Θερμίδες ανά ημέρα</h3>
-          <span style="font-size:0.72rem;color:var(--text3)">Στόχος: ${goals.kcal||'—'} kcal</span>
+          <h3>${t('stats_kcal_per_day')}</h3>
+          <span style="font-size:0.72rem;color:var(--text3)">${t('stats_goal')}: ${goals.kcal||'—'} kcal</span>
         </div>
         <div style="display:flex;gap:5px;align-items:flex-end">
           ${barsHtml}
@@ -5680,11 +5679,11 @@ function renderStatsPage() {
 
       <!-- Macros avg -->
       <div class="card">
-        <h3 style="margin-bottom:12px">Μέσος Όρος Μακροθρεπτικών</h3>
+        <h3 style="margin-bottom:12px">${t('stats_macros_avg')}</h3>
         ${[
-          { lbl:'🥩 Πρωτεΐνη', val:avgP, goal: goals.protein||180, color:'var(--blue)' },
-          { lbl:'🍚 Υδατάνθρακες', val:avgC, goal: goals.carbs||200, color:'var(--amber)' },
-          { lbl:'🫒 Λίπη', val:avgF, goal: goals.fat||60, color:'var(--purple)' },
+          { lbl:t('macro_protein_abbr'), val:avgP, goal: goals.protein||180, color:'var(--blue)' },
+          { lbl:t('macro_carbs_abbr'), val:avgC, goal: goals.carbs||200, color:'var(--amber)' },
+          { lbl:t('macro_fat_abbr'), val:avgF, goal: goals.fat||60, color:'var(--purple)' },
         ].map(m => {
           const pct = Math.min(100, Math.round((m.val / m.goal) * 100));
           return `
@@ -5703,20 +5702,20 @@ function renderStatsPage() {
       <!-- Activity -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="macro-card">
-          <div class="macro-card-label">Βήματα (εβδ. kcal)</div>
+          <div class="macro-card-label">${t('stats_steps_kcal')}</div>
           <div class="macro-card-value" style="color:var(--cyan)">${totalStepsKcal}</div>
-          <div class="macro-card-sub">${stepsDoneDays}/7 ημέρες ✅</div>
+          <div class="macro-card-sub">${tFmt('stats_days_steps', { n: stepsDoneDays })}</div>
         </div>
         <div class="macro-card">
-          <div class="macro-card-label">Γυμναστήριο (kcal)</div>
+          <div class="macro-card-label">${t('stats_gym_kcal')}</div>
           <div class="macro-card-value" style="color:var(--purple)">${totalTrainingKcal}</div>
-          <div class="macro-card-sub">${trainingDays}/7 προπονήσεις</div>
+          <div class="macro-card-sub">${tFmt('stats_workouts', { n: trainingDays })}</div>
         </div>
       </div>
 
       <!-- Body measurements chart -->
       <div class="card">
-        <h3 style="margin-bottom:12px">Εξέλιξη Σώματος</h3>
+        <h3 style="margin-bottom:12px">${t('stats_body_progress')}</h3>
         <div style="display:flex;gap:6px;margin-bottom:8px">
           ${bodyStatCard('#eff6ff','⚖️',weightVal,t('body_weight'),'#3b82f6')}
           ${bodyStatCard('#fef2f2','🩸',fatVal,t('body_fat'),'#ef4444')}

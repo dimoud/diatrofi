@@ -65,12 +65,16 @@ let currentSuite = '';
 
 function suite(name) { currentSuite = name; }
 
+let _testCounter = 0;
+
 function test(name, fn) {
+  _testCounter++;
+  const numbered = `#${_testCounter} ${name}`;
   try {
     fn();
-    results.push({ suite: currentSuite, name, pass: true });
+    results.push({ suite: currentSuite, name: numbered, pass: true });
   } catch (e) {
-    results.push({ suite: currentSuite, name, pass: false, msg: e.message });
+    results.push({ suite: currentSuite, name: numbered, pass: false, msg: e.message });
   }
 }
 
@@ -1374,6 +1378,228 @@ test('syncToSupabase exits early when no user', async () => {
   try { await syncToSupabase(); } catch(e) { threw = true; }
   assert(!threw, 'should not throw when no user');
   assertEq(_syncOwner, null, '_syncOwner should stay null');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// SUITE 30 — _parseDecimal (locale-aware number parser)
+// ══════════════════════════════════════════════════════════════════
+suite('_parseDecimal');
+
+test('plain integer', () => {
+  assertEq(_parseDecimal('75'), 75);
+});
+
+test('dot-decimal (English locale)', () => {
+  assertEq(_parseDecimal('75.5'), 75.5);
+});
+
+test('comma-decimal (Greek/German locale)', () => {
+  assertEq(_parseDecimal('75,5'), 75.5);
+});
+
+test('thousands dot then comma decimal (1.000,5)', () => {
+  assertEq(_parseDecimal('1.000,5'), 1000.5);
+});
+
+test('leading/trailing whitespace stripped', () => {
+  assertEq(_parseDecimal('  80 '), 80);
+});
+
+test('null returns NaN', () => {
+  assert(isNaN(_parseDecimal(null)));
+});
+
+test('empty string returns NaN', () => {
+  assert(isNaN(_parseDecimal('')));
+});
+
+test('non-numeric string returns NaN', () => {
+  assert(isNaN(_parseDecimal('abc')));
+});
+
+test('numeric string with spaces (1 000,5) is parsed', () => {
+  assertEq(_parseDecimal('1 000,5'), 1000.5);
+});
+
+test('zero is handled correctly', () => {
+  assertEq(_parseDecimal('0'), 0);
+});
+
+test('negative number with comma', () => {
+  assertEq(_parseDecimal('-3,14'), -3.14);
+});
+
+// ══════════════════════════════════════════════════════════════════
+// SUITE 31 — esc (HTML escape helper, XSS prevention)
+// ══════════════════════════════════════════════════════════════════
+suite('esc (HTML escape)');
+
+test('& is escaped to &amp;', () => {
+  assertEq(esc('a & b'), 'a &amp; b');
+});
+
+test('< is escaped to &lt;', () => {
+  assertEq(esc('<b>'), '&lt;b&gt;');
+});
+
+test('"  is escaped to &quot;', () => {
+  assertEq(esc('"hello"'), '&quot;hello&quot;');
+});
+
+test("' is escaped to &#39;", () => {
+  assertEq(esc("it's"), "it&#39;s");
+});
+
+test('plain text passes through unchanged', () => {
+  assertEq(esc('Hello World'), 'Hello World');
+});
+
+test('null returns empty string', () => {
+  assertEq(esc(null), '');
+});
+
+test('undefined returns empty string', () => {
+  assertEq(esc(undefined), '');
+});
+
+test('script tag is fully escaped', () => {
+  const input = '<scr' + 'ipt>alert(1)<\/scr' + 'ipt>';
+  const result = esc(input);
+  assert(!result.includes('<scr' + 'ipt>'), 'should not contain raw script tag');
+  assert(result.includes('&lt;scr'), 'should contain escaped version');
+});
+
+test('number is coerced to string and returned', () => {
+  assertEq(esc(42), '42');
+});
+
+test('all special chars in one string', () => {
+  assertEq(esc('& < > " \''), '&amp; &lt; &gt; &quot; &#39;');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// SUITE 32 — getModeDesc (optimizer mode descriptions)
+// ══════════════════════════════════════════════════════════════════
+suite('getModeDesc');
+
+test('mode 1 returns non-empty string', () => {
+  assert(getModeDesc(1).length > 0, 'mode 1 should have description');
+});
+
+test('mode 2 returns non-empty string', () => {
+  assert(getModeDesc(2).length > 0, 'mode 2 should have description');
+});
+
+test('mode 3 returns non-empty string', () => {
+  assert(getModeDesc(3).length > 0, 'mode 3 should have description');
+});
+
+test('unknown mode returns empty string', () => {
+  assertEq(getModeDesc(99), '');
+});
+
+test('mode 0 returns empty string', () => {
+  assertEq(getModeDesc(0), '');
+});
+
+test('mode descriptions are distinct', () => {
+  assert(getModeDesc(1) !== getModeDesc(2), 'modes 1 and 2 should differ');
+  assert(getModeDesc(2) !== getModeDesc(3), 'modes 2 and 3 should differ');
+});
+
+test('mode 1 description contains "Mode 1"', () => {
+  assert(getModeDesc(1).includes('Mode 1'), 'should identify itself');
+});
+
+// ══════════════════════════════════════════════════════════════════
+// SUITE 33 — applyGoalPace (macro goal presets)
+// ══════════════════════════════════════════════════════════════════
+suite('applyGoalPace');
+
+// Stub the DOM-touching calls inside applyGoalPace
+window.autoSaveSettings = () => {};
+const _origRenderProfile = window.renderProfile;
+window.renderProfile = () => {};
+
+const _paceProfile = { gender: 'male', weight: 80, height: 180, age: 30, activity: 3, dailySteps: 8000 };
+
+function withGoalPaceState(fn) {
+  const savedGoals   = JSON.parse(JSON.stringify(state.goals));
+  const savedProfile = JSON.parse(JSON.stringify(state.profile));
+  Object.assign(state.profile, _paceProfile);
+  state.profile.useCustomTDEE = false;
+  try { fn(); } finally {
+    state.goals   = savedGoals;
+    state.profile = savedProfile;
+  }
+}
+
+test('maintain sets kcal near TDEE (within 50 kcal)', () => {
+  withGoalPaceState(() => {
+    const tdee = calcTDEE(state.profile);
+    applyGoalPace('maintain');
+    assertNear(state.goals.kcal, Math.round(tdee / 50) * 50, 0, 'maintain kcal');
+  });
+});
+
+test('maintain sets protein to idealProtein(weight)', () => {
+  withGoalPaceState(() => {
+    applyGoalPace('maintain');
+    assertEq(state.goals.protein, calcIdealProtein(state.profile.weight));
+  });
+});
+
+test('bulk sets kcal above TDEE', () => {
+  withGoalPaceState(() => {
+    const tdee = calcTDEE(state.profile);
+    applyGoalPace('bulk');
+    assert(state.goals.kcal > tdee, `bulk kcal ${state.goals.kcal} should exceed TDEE ${tdee}`);
+  });
+});
+
+test('slow deficit sets kcal below TDEE', () => {
+  withGoalPaceState(() => {
+    const tdee = calcTDEE(state.profile);
+    applyGoalPace('slow');
+    assert(state.goals.kcal < tdee, `slow kcal ${state.goals.kcal} should be below TDEE ${tdee}`);
+  });
+});
+
+test('fast deficit sets kcal lower than slow deficit', () => {
+  withGoalPaceState(() => {
+    applyGoalPace('slow');
+    const slowKcal = state.goals.kcal;
+    applyGoalPace('fast');
+    const fastKcal = state.goals.kcal;
+    assert(fastKcal <= slowKcal, `fast (${fastKcal}) should be <= slow (${slowKcal})`);
+  });
+});
+
+test('aggressive sets lower kcal than moderate', () => {
+  withGoalPaceState(() => {
+    applyGoalPace('moderate');
+    const modKcal = state.goals.kcal;
+    applyGoalPace('aggressive');
+    const aggKcal = state.goals.kcal;
+    assert(aggKcal <= modKcal, `aggressive (${aggKcal}) should be <= moderate (${modKcal})`);
+  });
+});
+
+test('all modes set carbs and fat > 0', () => {
+  ['maintain','bulk','slow','moderate','fast','aggressive'].forEach(mode => {
+    withGoalPaceState(() => {
+      applyGoalPace(mode);
+      assert(state.goals.carbs > 0, `${mode}: carbs should be > 0`);
+      assert(state.goals.fat   > 0, `${mode}: fat should be > 0`);
+    });
+  });
+});
+
+test('sets goalPace in state', () => {
+  withGoalPaceState(() => {
+    applyGoalPace('maintain');
+    assertEq(state.goals.goalPace, 'maintain');
+  });
 });
 
 // ══════════════════════════════════════════════════════════════════

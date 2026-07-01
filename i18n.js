@@ -444,6 +444,129 @@ const I18N = {
   tdee_label:     { el: 'TDEE (kcal/ημέρα)', en: 'TDEE (kcal/day)', es: 'TDEE (kcal/día)', fr: 'TDEE (kcal/jour)' },
   tdee_suggested: { el: 'Προτεινόμενο TDEE', en: 'Suggested TDEE',  es: 'TDEE sugerido',   fr: 'TDEE suggéré' },
   tdee_custom:    { el: 'Χειροκίνητο',       en: 'Manual',          es: 'Manual',           fr: 'Manuel' },
+
+  // ── Daily page ──
+  today_remaining:      { el: 'ΑΠΟΜΕΝΟΥΝ',         en: 'REMAINING',          es: 'RESTANTE',           fr: 'RESTANT' },
+  today_kcal_day:       { el: 'kcal μέρας',        en: 'kcal/day',           es: 'kcal/día',           fr: 'kcal/jour' },
+  today_consumed:       { el: 'Καταναλώθηκαν',     en: 'Consumed',           es: 'Consumidas',         fr: 'Consommées' },
+  today_kcal_day_goal:  { el: 'Kcal ημέρας',       en: 'Day calories',       es: 'Calorías del día',   fr: 'Calories du jour' },
+  today_meals_header:   { el: 'Γεύματα',            en: 'Meals',              es: 'Comidas',            fr: 'Repas' },
+  today_add_meal:       { el: '➕ Προσθήκη Γεύματος', en: '➕ Add Meal',       es: '➕ Añadir Comida',  fr: '➕ Ajouter un repas' },
+  today_reset_checks:   { el: '↺ Reset',            en: '↺ Reset',            es: '↺ Reset',            fr: '↺ Reset' },
+  today_reset_meals:    { el: '🗑 Default',          en: '🗑 Default',         es: '🗑 Por defecto',     fr: '🗑 Défaut' },
+  today_extra_kcal:     { el: '🍕 Επιπλέον Θερμίδες (εκτός πλάνου)', en: '🍕 Extra Calories (outside plan)', es: '🍕 Calorías extra (fuera del plan)', fr: '🍕 Calories supplémentaires (hors plan)' },
+  today_day_total:      { el: 'Σύνολο ημέρας',      en: 'Day total',          es: 'Total del día',      fr: 'Total journalier' },
+  today_outside_plan:   { el: 'εκτός πλάνου',       en: 'outside plan',       es: 'fuera del plan',     fr: 'hors plan' },
+  today_running_total:  { el: 'Σύνολο ως τώρα',     en: 'Running total',      es: 'Total hasta ahora',  fr: 'Total jusqu\'ici' },
+  today_extra_cleared:  { el: '✓ Extra kcal καθαρίστηκαν', en: '✓ Extra kcal cleared', es: '✓ Kcal extra borradas', fr: '✓ Kcal supplémentaires effacées' },
+  today_extra_added:    { el: '+{n} kcal καταχωρήθηκαν', en: '+{n} kcal logged', es: '+{n} kcal registradas', fr: '+{n} kcal enregistrées' },
+  today_default_reset:  { el: '↺', en: '↺', es: '↺', fr: '↺' },
+
+  // ── Activity section ──
+  act_section_title:    { el: 'ΔΡΑΣΤΗΡΙΟΤΗΤΑ & ΕΛΛΕΙΜΜΑ', en: 'ACTIVITY & DEFICIT', es: 'ACTIVIDAD & DÉFICIT', fr: 'ACTIVITÉ & DÉFICIT' },
+  act_training:         { el: 'Προπόνηση',           en: 'Workout',            es: 'Entrenamiento',      fr: 'Entraînement' },
+  act_training_kcal:    { el: '~{kcal} kcal σήμερα · 1h βαρά', en: '~{kcal} kcal today · 1h weights', es: '~{kcal} kcal hoy · 1h pesas', fr: '~{kcal} kcal aujourd\'hui · 1h musculation' },
+  act_neat:             { el: 'Πρόσθετη βασική',     en: 'Extra base burn',    es: 'Quema base extra',   fr: 'Dépense de base sup.' },
+  act_steps_kcal_today: { el: '~{kcal} kcal σήμερα · ~{weekly} kcal/εβδ.', en: '~{kcal} kcal today · ~{weekly} kcal/week', es: '~{kcal} kcal hoy · ~{weekly} kcal/sem.', fr: '~{kcal} kcal aujourd\'hui · ~{weekly} kcal/sem.' },
+  act_steps_unit:       { el: 'βήματα',              en: 'steps',              es: 'pasos',              fr: 'pas' },
+  act_total_burn:       { el: '🔥 Σύνολο {kcal} kcal · BMR Κατανάλωση {bmr} kcal', en: '🔥 Total {kcal} kcal · BMR Consumption {bmr} kcal', es: '🔥 Total {kcal} kcal · Consumo BMR {bmr} kcal', fr: '🔥 Total {kcal} kcal · Consommation BMR {bmr} kcal' },
+
+  // ── Week page ──
+  week_title:           { el: 'Εβδομαδιαίο Πρόγραμμα', en: 'Weekly Program',   es: 'Programa Semanal',   fr: 'Programme Hebdomadaire' },
+  week_days_kcal:       { el: '7 ημέρες · {kcal} kcal/ημέρα', en: '7 days · {kcal} kcal/day', es: '7 días · {kcal} kcal/día', fr: '7 jours · {kcal} kcal/jour' },
+  week_regen:           { el: 'Ξανά',                  en: 'Redo',               es: 'Rehacer',            fr: 'Refaire' },
+  week_reset:           { el: 'Επαναφορά',             en: 'Reset',              es: 'Restablecer',        fr: 'Réinitialiser' },
+  week_total:           { el: 'Σύνολο εβδομάδας',     en: 'Weekly total',       es: 'Total semanal',      fr: 'Total hebdomadaire' },
+  week_avg_kcal_day:    { el: 'Μέσ. {kcal} kcal/ημέρα', en: 'Avg. {kcal} kcal/day', es: 'Prom. {kcal} kcal/día', fr: 'Moy. {kcal} kcal/jour' },
+  week_macros_avg:      { el: 'ΜΑΚΡΟΘΡΕΠΤΙΚΑ (ΜΕΣΟΣ ΟΡΟΣ)', en: 'MACROS (AVERAGE)', es: 'MACROS (PROMEDIO)', fr: 'MACROS (MOYENNE)' },
+  week_balance_title:   { el: 'ΙΣΟΡΡΟΠΙΑ ΕΒΔΟΜΑΔΑΣ',  en: 'WEEKLY BALANCE',     es: 'BALANCE SEMANAL',    fr: 'BILAN HEBDOMADAIRE' },
+
+  // ── Regen / Reset modals ──
+  week_regen_title:     { el: '🔄 Δημιούργησε Ξανά',  en: '🔄 Regenerate Plan', es: '🔄 Regenerar Plan',  fr: '🔄 Regénérer le plan' },
+  week_regen_desc:      { el: 'Επίλεξε στυλ και δημιούργησε νέο τυχαίο πρόγραμμα με βάση τις προτιμήσεις σου.', en: 'Choose a style and generate a new random plan based on your preferences.', es: 'Elige un estilo y genera un nuevo plan aleatorio según tus preferencias.', fr: 'Choisis un style et génère un nouveau plan aléatoire selon tes préférences.' },
+  week_regen_btn:       { el: '🎲 Δημιουργία',        en: '🎲 Generate',        es: '🎲 Generar',         fr: '🎲 Générer' },
+  week_reset_title:     { el: '🔄 Επαναφορά πλάνου',  en: '🔄 Reset Plan',      es: '🔄 Restablecer Plan', fr: '🔄 Réinitialiser le plan' },
+  week_reset_desc:      { el: 'Θέλεις σίγουρα να επαναφέρεις <strong>ολόκληρο</strong> το εβδομαδιαίο πλάνο στις προεπιλογές;<br><span style="color:#ef4444;font-weight:700">Όλες οι αλλαγές θα χαθούν.</span>', en: 'Are you sure you want to reset <strong>the entire</strong> weekly plan to defaults?<br><span style="color:#ef4444;font-weight:700">All changes will be lost.</span>', es: '¿Estás seguro de que quieres restablecer <strong>todo</strong> el plan semanal?<br><span style="color:#ef4444;font-weight:700">Todos los cambios se perderán.</span>', fr: 'Veux-tu vraiment réinitialiser <strong>tout</strong> le plan hebdomadaire ?<br><span style="color:#ef4444;font-weight:700">Toutes les modifications seront perdues.</span>' },
+  week_reset_btn:       { el: 'Επαναφορά',            en: 'Reset',              es: 'Restablecer',        fr: 'Réinitialiser' },
+  week_applied_all:     { el: '✅ Εφαρμόστηκε σε όλες τις ημέρες!', en: '✅ Applied to all days!', es: '✅ ¡Aplicado a todos los días!', fr: '✅ Appliqué à tous les jours !' },
+
+  // ── Stats page ──
+  stats_avg_kcal_day:   { el: 'Μ.Ό. Kcal/ημέρα',    en: 'Avg Kcal/day',       es: 'Prom. Kcal/día',     fr: 'Moy. Kcal/jour' },
+  stats_avg_kcal_short: { el: 'Μ.Ό. Kcal/ημ',       en: 'Avg Kcal/d',         es: 'Prom. Kcal/d',       fr: 'Moy. Kcal/j' },
+  stats_avg_protein:    { el: 'Μ.Ό. Πρωτεΐνη',      en: 'Avg Protein',        es: 'Prom. Proteína',     fr: 'Moy. Protéines' },
+  stats_macros_avg:     { el: 'Μέσος Όρος Μακροθρεπτικών', en: 'Average Macros', es: 'Promedio de Macros', fr: 'Moyenne des Macros' },
+  stats_week_total:     { el: 'Σύνολο εβδομάδας',   en: 'Weekly total',       es: 'Total semanal',      fr: 'Total hebdomadaire' },
+  stats_days_steps:     { el: '{n}/7 ημέρες ✅',      en: '{n}/7 days ✅',       es: '{n}/7 días ✅',       fr: '{n}/7 jours ✅' },
+  stats_week_total_short: { el: 'Σύνολο εβδομάδας', en: 'Weekly total',       es: 'Total semanal',      fr: 'Total hebdomadaire' },
+  stats_avg_intake_svg: { el: 'Μέση πρόσληψη',       en: 'Avg intake',         es: 'Ingesta media',      fr: 'Apport moyen' },
+
+  // ── Builder page ──
+  builder_meals_selected: { el: '🍽️ Γεύματα επιλεγμένα', en: '🍽️ Meals selected', es: '🍽️ Comidas seleccionadas', fr: '🍽️ Repas sélectionnés' },
+  builder_optimize_ai:  { el: '✨ Βελτιστοποίηση με AI', en: '✨ Optimize with AI', es: '✨ Optimizar con IA', fr: '✨ Optimiser avec IA' },
+  builder_mode1_label:  { el: 'Max Πρωτεΐνη',        en: 'Max Protein',        es: 'Máx Proteína',       fr: 'Max Protéines' },
+  builder_apply_days:   { el: 'Εφαρμογή στο πρόγραμμα ({n} ημέρες)', en: 'Apply to schedule ({n} days)', es: 'Aplicar al programa ({n} días)', fr: 'Appliquer au programme ({n} jours)' },
+  builder_week_summary: { el: 'Συνοπτική εβδομαδιαία προβολή: ημέρες, γεύματα, θερμίδες, macros.', en: 'Weekly overview: days, meals, calories, macros.', es: 'Resumen semanal: días, comidas, calorías, macros.', fr: 'Vue hebdomadaire : jours, repas, calories, macros.' },
+  builder_create_plan:  { el: '📋 Δημιουργία Πλάνου', en: '📋 Create Plan',     es: '📋 Crear Plan',       fr: '📋 Créer le plan' },
+
+  // ── Macro labels (inline / table) ──
+  macro_protein_abbr:   { el: '🥩 Πρωτεΐνη',         en: '🥩 Protein',         es: '🥩 Proteína',         fr: '🥩 Protéines' },
+  macro_carbs_abbr:     { el: '🍚 Υδατάνθρακες',     en: '🍚 Carbs',           es: '🍚 Carbos',           fr: '🍚 Glucides' },
+  macro_fat_abbr:       { el: '🫒 Λίπος',            en: '🫒 Fat',             es: '🫒 Grasa',            fr: '🫒 Lipides' },
+
+  // ── PDF / Print ──
+  pdf_week_title:       { el: 'Εβδομαδιαίο Πρόγραμμα', en: 'Weekly Program',   es: 'Programa Semanal',   fr: 'Programme Hebdomadaire' },
+  pdf_week_subtitle:    { el: '7 ημέρες · {kcal} kcal/ημέρα κατά μέσο όρο', en: '7 days · {kcal} kcal/day average', es: '7 días · {kcal} kcal/día de media', fr: '7 jours · {kcal} kcal/jour en moyenne' },
+  pdf_week_total:       { el: 'Σύνολο εβδομάδας',    en: 'Weekly total',       es: 'Total semanal',      fr: 'Total hebdomadaire' },
+  pdf_extra_kcal:       { el: '⚠️ Επιπλέον εκτός πλάνου: +{n} kcal', en: '⚠️ Extra outside plan: +{n} kcal', es: '⚠️ Extra fuera del plan: +{n} kcal', fr: '⚠️ Extra hors plan : +{n} kcal' },
+
+  // ── AI messages ──
+  ai_wait:              { el: 'Περίμενε {time} λεπτά πριν την επόμενη βελτιστοποίηση', en: 'Wait {time} before the next optimization', es: 'Espera {time} antes de la próxima optimización', fr: 'Attends {time} avant la prochaine optimisation' },
+  ai_limit:             { el: 'Το AI όριο χρήσης εξαντλήθηκε. Δοκίμασε αύριο ή αναβάθμισε το Gemini API plan.', en: 'AI usage limit reached. Try again tomorrow or upgrade your Gemini API plan.', es: 'Límite de uso de IA alcanzado. Intenta mañana o actualiza tu plan de API de Gemini.', fr: 'Limite d\'utilisation IA atteinte. Réessaie demain ou améliore ton plan API Gemini.' },
+  ai_json_error:        { el: 'Δεν βρέθηκε έγκυρο JSON στην απάντηση', en: 'No valid JSON found in response', es: 'No se encontró JSON válido en la respuesta', fr: 'Aucun JSON valide trouvé dans la réponse' },
+  ai_days_error:        { el: 'Αναμενόταν 7 ημέρες', en: 'Expected 7 days', es: 'Se esperaban 7 días', fr: '7 jours attendus' },
+  ai_estimate_ok:       { el: '✅ AI εκτίμηση θερμίδων!', en: '✅ AI calorie estimate!', es: '✅ ¡Estimación de calorías IA!', fr: '✅ Estimation calorique IA !' },
+  ai_optimize_ok:       { el: '✅ Το πλάνο βελτιστοποιήθηκε με AI!', en: '✅ Plan optimized with AI!', es: '✅ ¡Plan optimizado con IA!', fr: '✅ Plan optimisé avec IA !' },
+  ai_generate_ok:       { el: '✅ Το εβδομαδιαίο πλάνο δημιουργήθηκε επιτυχώς!', en: '✅ Weekly plan created successfully!', es: '✅ ¡Plan semanal creado con éxito!', fr: '✅ Plan hebdomadaire créé avec succès !' },
+  ai_optimizing:        { el: '⏳ Βελτιστοποίηση...', en: '⏳ Optimizing...', es: '⏳ Optimizando...', fr: '⏳ Optimisation...' },
+  ai_generating:        { el: '⏳ Δημιουργία...',     en: '⏳ Generating...', es: '⏳ Generando...', fr: '⏳ Génération...' },
+  ai_optimize_btn:      { el: '✨ Βελτιστοποίηση με AI', en: '✨ Optimize with AI', es: '✨ Optimizar con IA', fr: '✨ Optimiser avec IA' },
+  ai_generate_btn:      { el: '✨ Δημιουργία Πλάνου με AI', en: '✨ Create Plan with AI', es: '✨ Crear Plan con IA', fr: '✨ Créer le plan avec IA' },
+
+  // ── Week footer stats ──
+  week_food_variety:    { el: 'Ποικιλία τροφών',    en: 'Food variety',       es: 'Variedad de alimentos', fr: 'Variété alimentaire' },
+  week_food_variety_count: { el: '{n} διαφ. τρόφιμα', en: '{n} diff. foods', es: '{n} alimentos dif.', fr: '{n} aliments diff.' },
+  week_hydration:       { el: 'Ενυδάτωση',           en: 'Hydration',          es: 'Hidratación',          fr: 'Hydratation' },
+  week_hydration_goal:  { el: 'Στόχος: {ml}ml/ημέρα', en: 'Goal: {ml}ml/day', es: 'Objetivo: {ml}ml/día', fr: 'Objectif : {ml}ml/jour' },
+  week_goal_progress:   { el: 'Πρόοδος στόχου',      en: 'Goal progress',      es: 'Progreso del objetivo', fr: 'Progression de l\'objectif' },
+  week_this_week:       { el: 'Αυτή την εβδομάδα',   en: 'This week',          es: 'Esta semana',          fr: 'Cette semaine' },
+
+  // ── Supplement guide row labels ──
+  suppl_guide_timing:   { el: 'Ιδανική ώρα',       en: 'Best time',          es: 'Mejor momento',      fr: 'Meilleur moment' },
+  suppl_guide_intake:   { el: 'Τρόπος',             en: 'How to take',        es: 'Cómo tomar',         fr: 'Comment prendre' },
+  suppl_guide_boosts:   { el: '✅ Βελτιώνει',       en: '✅ Boosted by',      es: '✅ Potenciado por',  fr: '✅ Renforcé par' },
+  suppl_guide_reduces:  { el: '⚠️ Μειώνει',        en: '⚠️ Reduced by',     es: '⚠️ Reducido por',   fr: '⚠️ Réduit par' },
+  suppl_guide_avoid:    { el: '🚫 Αποφύγετε',       en: '🚫 Avoid',           es: '🚫 Evitar',          fr: '🚫 Éviter' },
+  suppl_guide_drinks:   { el: '☕ Καφές/Τσάι',      en: '☕ Coffee/Tea',      es: '☕ Café/Té',         fr: '☕ Café/Thé' },
+  suppl_guide_gap:      { el: '⏱ Απόσταση',         en: '⏱ Gap',              es: '⏱ Intervalo',        fr: '⏱ Intervalle' },
+  suppl_evidence_label: { el: 'Τεκμηρίωση',         en: 'Evidence',           es: 'Evidencia',          fr: 'Preuves' },
+  suppl_section:        { el: '💊 Συμπληρώματα',    en: '💊 Supplements',     es: '💊 Suplementos',     fr: '💊 Suppléments' },
+  suppl_no_active:      { el: 'Δεν έχεις επιλέξει συμπληρώματα. Πήγαινε στις <strong>Ρυθμίσεις → Συμπληρώματα</strong>.', en: 'No supplements selected. Go to <strong>Settings → Supplements</strong>.', es: 'Sin suplementos seleccionados. Ve a <strong>Ajustes → Suplementos</strong>.', fr: 'Aucun supplément sélectionné. Va dans <strong>Paramètres → Suppléments</strong>.' },
+  today_extra_kcal_desc: { el: 'Φάγατε κάτι παραπάνω; Καταγράψτε το εδώ. Η ημέρα θα κοκκινίσει στην Εβδομάδα.', en: 'Ate something extra? Log it here. The day will be highlighted in the Week view.', es: '¿Comiste algo extra? Regístralo aquí. El día se marcará en la vista semanal.', fr: 'Mangé quelque chose en plus ? Enregistre-le ici. Le jour sera mis en évidence dans la vue hebdomadaire.' },
+
+  // ── Stats page ──
+  stats_week_deficit:   { el: 'Εβδ. Ισοζύγιο',    en: 'Weekly Balance',     es: 'Balance semanal',    fr: 'Bilan hebdomadaire' },
+  stats_deficit_kcal:   { el: 'kcal έλλειμμα',     en: 'kcal deficit',       es: 'kcal déficit',       fr: 'kcal déficit' },
+  stats_surplus_kcal:   { el: 'kcal πλεόνασμα',    en: 'kcal surplus',       es: 'kcal superávit',     fr: 'kcal surplus' },
+  stats_kcal_per_day:   { el: 'Θερμίδες ανά ημέρα', en: 'Calories per day', es: 'Calorías por día',   fr: 'Calories par jour' },
+  stats_body_progress:  { el: 'Εξέλιξη Σώματος',   en: 'Body Progress',      es: 'Progreso corporal',  fr: 'Progression corporelle' },
+  stats_steps_kcal:     { el: 'Βήματα (εβδ. kcal)', en: 'Steps (weekly kcal)', es: 'Pasos (kcal sem.)', fr: 'Pas (kcal sem.)' },
+  stats_gym_kcal:       { el: 'Γυμναστήριο (kcal)', en: 'Gym (kcal)',         es: 'Gimnasio (kcal)',   fr: 'Salle (kcal)' },
+  stats_workouts:       { el: '{n}/7 προπονήσεις',  en: '{n}/7 workouts',     es: '{n}/7 entrenamientos', fr: '{n}/7 entraînements' },
+
+  // ── Misc ──
+  day_reset_ok:         { el: '✅ Ημέρα επαναφέρθηκε στα default', en: '✅ Day reset to defaults', es: '✅ Día restablecido a valores predeterminados', fr: '✅ Jour réinitialisé aux valeurs par défaut' },
+  add_meal_modal_title: { el: '➕ Προσθήκη Γεύματος', en: '➕ Add Meal',        es: '➕ Añadir Comida',   fr: '➕ Ajouter un repas' },
+  optimize_mode1:       { el: 'Mode 1',               en: 'Mode 1',             es: 'Modo 1',             fr: 'Mode 1' },
 };
 
 // ── Current language (default: Greek) ──
