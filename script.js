@@ -1894,8 +1894,8 @@ function wizardNext() {
     state.week = generateSmartWeek(style, state.wizardExcluded);
     saveState();
     updatePlanCreatedUI();
-    renderProfile();
     showToast('✅ Το πλάνο δημιουργήθηκε βάσει των προτιμήσεών σου!');
+    navigateTo('week');
   }
 }
 
@@ -2395,7 +2395,6 @@ function renderToday() {
       // Εμφάνιση items λίστας
       bodyHtml = `<div class="meal-ingredients">
         ${sm.items.map(it => `<div class="ingredient-row"><span class="ingredient-name">${it}</span></div>`).join('')}
-        ${sm.note ? `<div style="margin-top:6px;font-size:0.75rem;color:var(--text3);font-style:italic">💡 ${sm.note}</div>` : ''}
       </div>
       <div class="meal-macros">
         <div class="macro-chip"><div class="macro-chip-val" style="color:#22c55e">~${m.kcal}</div><div class="macro-chip-lbl">kcal</div></div>
@@ -2403,7 +2402,16 @@ function renderToday() {
         <div class="macro-chip"><div class="macro-chip-val" style="color:#8b5cf6">${m.c > 0 ? m.c + 'g' : '—'}</div><div class="macro-chip-lbl">υδατ.</div></div>
         <div class="macro-chip"><div class="macro-chip-val" style="color:#f59e0b">${m.f > 0 ? m.f + 'g' : '—'}</div><div class="macro-chip-lbl">λίπος</div></div>
       </div>
-      ${sf !== 1 ? `<div style="font-size:0.7rem;color:var(--text3);margin:4px 0">📏 Μερίδα ×${sf}</div>` : ''}`;
+      ${sf !== 1 ? `<div style="font-size:0.7rem;color:var(--text3);margin:4px 0">📏 Μερίδα ×${sf}</div>` : ''}
+      ${sm.note ? `
+      <button class="recipe-expand-btn" onclick="toggleRecipeExpand(this)" aria-expanded="false">
+        📋 Πρόταση Σερβιρίσματος <span class="recipe-expand-arrow">▼</span>
+      </button>
+      <div class="recipe-expand-body">
+        <div>
+          <div class="recipe-serving"><span class="recipe-serving-icon">💡</span> ${sm.note}</div>
+        </div>
+      </div>` : ''}`;
     } else {
       const allFoods = [...FOODS_DB, ...state.customFoods];
       const ingHtml = recipe.ingredients.map(ing => {
