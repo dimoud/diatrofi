@@ -2897,9 +2897,12 @@ function renderWeek() {
 
       <!-- Header -->
       <div class="week-page-header">
-        <div>
-          <h1 style="font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:4px">${t('week_title')}</h1>
-          <div style="font-size:0.78rem;color:var(--text3)">${tFmt('week_days_kcal', { kcal: avgKcal.toLocaleString() })}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div>
+            <h1 style="font-size:1.4rem;font-weight:900;color:var(--text);margin-bottom:4px">${t('week_title')}</h1>
+            <div style="font-size:0.78rem;color:var(--text3)">${tFmt('week_days_kcal', { kcal: avgKcal.toLocaleString() })}</div>
+          </div>
+          <a href="https://revolut.me/dimitrtxl" target="_blank" rel="noopener" title="Υποστήριξε το VIVON" style="display:flex;align-items:center;gap:4px;padding:5px 13px;border-radius:8px;border:1.5px solid var(--border);background:transparent;color:#3b82f6;font-size:0.82rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:border-color 0.15s" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='var(--border)'">&#9829; Δωρεά</a>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
           <div style="display:flex;align-items:center;gap:2px;background:var(--bg);border-radius:10px;padding:4px 8px;border:1px solid var(--border)">
@@ -4895,11 +4898,11 @@ function _pdfPersonBadge() {
   const name = p.name || '';
   const photoUrl = p.photoUrl;
   const avatarHtml = _isSafeUrl(photoUrl)
-    ? `<img src="${photoUrl}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">`
-    : `<div style="width:26px;height:26px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#6b7280;flex-shrink:0">${(name || 'V').charAt(0).toUpperCase()}</div>`;
-  return `<div style="position:fixed;bottom:6mm;left:7mm;display:flex;align-items:center;gap:6px;opacity:0.55;z-index:100">
+    ? `<img src="${photoUrl}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="">`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#6b7280;flex-shrink:0">${(name || 'V').charAt(0).toUpperCase()}</div>`;
+  return `<div style="position:fixed;bottom:6mm;left:7mm;display:flex;align-items:center;gap:10px;opacity:0.7;z-index:100">
     ${avatarHtml}
-    ${name ? `<span style="font-size:9px;font-weight:700;color:#374151;white-space:nowrap">${esc(name)}</span>` : ''}
+    ${name ? `<span style="font-size:18px;font-weight:800;color:#374151;white-space:nowrap">${esc(name)}</span>` : ''}
   </div>`;
 }
 
@@ -4968,13 +4971,13 @@ function exportDayPDF(dayIdx) {
     <div style="font-family:'Helvetica Neue',Arial,sans-serif;padding:10mm 12mm;min-height:277mm;box-sizing:border-box">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:3px solid #22c55e">
         <div>
-          <div style="font-size:17px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
-          <div style="font-size:10px;color:#6b7280;margin-top:2px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%) · ${p.name||'Vivon'}</div>
+          <div style="font-size:28px;font-weight:800;color:#111">${day.label}${dateLabel}</div>
+          <div style="font-size:13px;font-weight:700;color:#374151;margin-top:4px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%) · ${p.name||'Vivon'}</div>
         </div>
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
           <div style="display:flex;align-items:center;gap:5px">
-            <img src="logo.png" alt="" style="height:18px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
-            <span style="font-size:13px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px">VIVON</span>
+            <img src="logo.png" alt="" style="height:54px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
+            <span style="font-size:39px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.5px">VIVON</span>
           </div>
           <div style="font-size:11px;font-weight:700;color:#3b82f6">${t('macro_protein')}: ${tot.p}g</div>
           <div style="font-size:11px;font-weight:700;color:#8b5cf6">${t('macro_carbs')}: ${tot.c}g</div>
@@ -4987,19 +4990,19 @@ function exportDayPDF(dayIdx) {
       <table style="width:100%;border-collapse:collapse;font-size:9.5px">
         <thead>
           <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:85px">ΓΕΥΜΑ</th>
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700">ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:85px">${t('pdf_meal_col')}</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700">${t('pdf_recipe_col')}</th>
             <th style="padding:7px 8px;text-align:right;font-size:9px;color:#475569;font-weight:700;width:55px">KCAL</th>
             <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:130px">MACROS</th>
-            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:45px">ΩΡΑ</th>
+            <th style="padding:7px 8px;text-align:left;font-size:9px;color:#475569;font-weight:700;width:45px">${t('pdf_time_col')}</th>
           </tr>
         </thead>
         <tbody>${mealRows}${extraRow}</tbody>
         <tfoot>
           <tr style="background:#f0fdf4;border-top:2px solid #22c55e">
-            <td colspan="2" style="padding:8px;font-weight:800;font-size:11px;color:#111">ΣΥΝΟΛΟ ΗΜΕΡΑΣ</td>
+            <td colspan="2" style="padding:8px;font-weight:800;font-size:11px;color:#111">${t('pdf_day_total')}</td>
             <td style="padding:8px;font-weight:800;font-size:12px;color:#22c55e;text-align:right">${tot.kcal + extraKcal}</td>
-            <td style="padding:8px;font-size:9.5px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
+            <td style="padding:8px;font-size:9.5px;color:#374151">${t('macro_p_abbr')}:${tot.p}g · ${t('macro_c_abbr')}:${tot.c}g · ${t('macro_f_abbr')}:${tot.f}g</td>
             <td></td>
           </tr>
         </tfoot>
@@ -5007,7 +5010,7 @@ function exportDayPDF(dayIdx) {
     </div>`;
 
   document.getElementById('print-view').innerHTML = html;
-  showToast('⏳ Άνοιγμα εκτύπωσης...');
+  showToast(t('pdf_open_print'));
   setTimeout(() => window.print(), 400);
 }
 
@@ -5102,13 +5105,13 @@ function exportPDF_today() {
     <div style="padding:8mm 10mm;font-family:'Helvetica Neue',Arial,sans-serif">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:3px solid #22c55e">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#111">${day.label}${dateLabel}</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:3px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%)</div>
+          <div style="font-size:30px;font-weight:900;color:#111">${day.label}${dateLabel}</div>
+          <div style="font-size:14px;color:#6b7280;margin-top:3px">${t('stats_goal')}: ${g.kcal} kcal · Plan: ${tot.kcal} kcal (${pct}%)</div>
         </div>
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-            <img src="logo.png" alt="" style="height:22px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
-            <span style="font-size:18px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <img src="logo.png" alt="" style="height:66px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
+            <span style="font-size:54px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
           </div>
           <div style="font-size:13px;font-weight:700;color:#3b82f6">${t('macro_protein')}: ${tot.p}g</div>
           <div style="font-size:13px;font-weight:700;color:#8b5cf6">${t('macro_carbs')}: ${tot.c}g</div>
@@ -5121,25 +5124,25 @@ function exportPDF_today() {
       <table style="width:100%;border-collapse:collapse;font-size:11px">
         <thead>
           <tr style="background:#f1f5f9;border-bottom:2px solid #cbd5e1">
-            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700;width:95px">ΓΕΥΜΑ</th>
-            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ</th>
+            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700;width:95px">${t('pdf_meal_col').toUpperCase()}</th>
+            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">${t('pdf_recipe_col').toUpperCase()}</th>
             <th style="padding:9px 10px;text-align:right;font-size:10.5px;color:#475569;font-weight:700;width:60px">KCAL</th>
             <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700;width:140px">MACROS</th>
-            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700;width:50px">ΩΡΑ</th>
+            <th style="padding:9px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700;width:50px">${t('pdf_time_col').toUpperCase()}</th>
           </tr>
         </thead>
         <tbody>${mealRows}${extraRow}</tbody>
         <tfoot>
           <tr style="background:#f0fdf4;border-top:2px solid #22c55e">
-            <td colspan="2" style="padding:10px;font-weight:800;font-size:13px;color:#111">ΣΥΝΟΛΟ ΗΜΕΡΑΣ</td>
+            <td colspan="2" style="padding:10px;font-weight:800;font-size:13px;color:#111">${t('pdf_day_total').toUpperCase()}</td>
             <td style="padding:10px;font-weight:800;font-size:14px;color:#22c55e;text-align:right">${tot.kcal + extraKcal}</td>
-            <td style="padding:10px;font-size:11px;color:#374151">Π:${tot.p}g · Υ:${tot.c}g · Λ:${tot.f}g</td>
+            <td style="padding:10px;font-size:11px;color:#374151">${t('macro_p_abbr')}:${tot.p}g · ${t('macro_c_abbr')}:${tot.c}g · ${t('macro_f_abbr')}:${tot.f}g</td>
             <td></td>
           </tr>
         </tfoot>
       </table>
     </div>`;
-  showToast('⏳ Άνοιγμα εκτύπωσης...');
+  showToast(t('pdf_open_print'));
   setTimeout(() => window.print(), 400);
 }
 
@@ -5181,7 +5184,7 @@ function exportPDF_stats() {
       <td style="padding:8px 10px;font-size:13px;font-weight:800;color:#111">${DAYS_EL[i]}</td>
       <td style="padding:8px 10px;font-size:12px;color:#374151">${d.kcal > 0 ? d.kcal.toLocaleString()+' kcal' : '—'}</td>
       <td style="padding:8px 10px;font-size:12px;color:${col};font-weight:700">${d.kcal > 0 ? pct+'%' : '—'}</td>
-      <td style="padding:8px 10px;font-size:11px;color:#6b7280">Π:${d.p}g Υ:${d.c}g Λ:${d.f}g</td>
+      <td style="padding:8px 10px;font-size:11px;color:#6b7280">${t('macro_p_abbr')}:${d.p}g ${t('macro_c_abbr')}:${d.c}g ${t('macro_f_abbr')}:${d.f}g</td>
       <td style="padding:8px 10px;font-size:11px;color:#6b7280">${d.day.stepsDone ? '👟 '+( d.day.stepsCount||8000).toLocaleString() : '—'} ${d.day.weightTraining ? '🏋️' : ''}</td>
       <td style="padding:8px 10px;font-size:12px;font-weight:700;color:${d.deficit>0?'#22c55e':'#ef4444'}">${d.deficit > 0 ? '-' : '+'}${Math.abs(Math.round(d.deficit))} kcal</td>
     </tr>`;
@@ -5196,12 +5199,12 @@ function exportPDF_stats() {
     <div style="padding:8mm 10mm;font-family:'Helvetica Neue',Arial,sans-serif">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:3px solid #22c55e">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#111">Στατιστικά Εβδομάδας</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:3px">Αναλυτική αναφορά</div>
+          <div style="font-size:30px;font-weight:900;color:#111">${t('pdf_stats_title')}</div>
+          <div style="font-size:14px;color:#6b7280;margin-top:3px">${t('pdf_stats_subtitle')}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <img src="logo.png" alt="" style="height:22px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
-          <span style="font-size:20px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="logo.png" alt="" style="height:66px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
+          <span style="font-size:54px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
         </div>
       </div>
 
@@ -5217,9 +5220,9 @@ function exportPDF_stats() {
           <div style="font-size:10px;color:#9ca3af">${t('stats_goal')} ${g.protein||'—'}g</div>
         </div>
         <div style="background:${totalDeficit>0?'#f0fdf4':'#fef2f2'};border-radius:10px;padding:12px 14px;text-align:center">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Εβδ. Ισοζύγιο</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('stats_week_deficit')}</div>
           <div style="font-size:22px;font-weight:900;color:${totalDeficit>0?'#22c55e':'#ef4444'}">${Math.abs(Math.round(totalDeficit))}</div>
-          <div style="font-size:10px;color:#9ca3af">${totalDeficit>0?'kcal έλλειμμα':'kcal πλεόνασμα'}</div>
+          <div style="font-size:10px;color:#9ca3af">${totalDeficit>0?t('stats_deficit_kcal'):t('stats_surplus_kcal')}</div>
         </div>
       </div>
 
@@ -5231,16 +5234,16 @@ function exportPDF_stats() {
       </div>
 
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:18px">
-        <div style="padding:12px 14px;font-size:13px;font-weight:800;color:#111;border-bottom:1px solid #e5e7eb">Ανά Ημέρα</div>
+        <div style="padding:12px 14px;font-size:13px;font-weight:800;color:#111;border-bottom:1px solid #e5e7eb">${t('pdf_per_day')}</div>
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr style="background:#f8fafc">
-              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">ΗΜΕΡΑ</th>
+              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">${t('pdf_col_day')}</th>
               <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">KCAL</th>
               <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">%</th>
               <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">MACROS</th>
-              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">ΔΡΑΣΤΗΡΙΟΤΗΤΑ</th>
-              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">ΙΣΟΖΥΓΙΟ</th>
+              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">${t('pdf_col_activity')}</th>
+              <th style="padding:8px 10px;text-align:left;font-size:10.5px;color:#475569;font-weight:700">${t('pdf_col_balance')}</th>
             </tr>
           </thead>
           <tbody>${dayRows}</tbody>
@@ -5249,18 +5252,18 @@ function exportPDF_stats() {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div style="background:#ecfeff;border-radius:10px;padding:12px 14px;text-align:center">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Βήματα (εβδ. kcal)</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('pdf_steps_kcal')}</div>
           <div style="font-size:20px;font-weight:900;color:#06b6d4">${totalStepsKcal}</div>
           <div style="font-size:10px;color:#9ca3af">${tFmt('stats_days_steps', { n: stepsDoneDays })}</div>
         </div>
         <div style="background:#f5f3ff;border-radius:10px;padding:12px 14px;text-align:center">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Γυμναστήριο (kcal)</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('pdf_gym_kcal')}</div>
           <div style="font-size:20px;font-weight:900;color:#8b5cf6">${totalTrainingKcal}</div>
-          <div style="font-size:10px;color:#9ca3af">${trainingDays}/7 προπονήσεις</div>
+          <div style="font-size:10px;color:#9ca3af">${tFmt('pdf_workouts', { n: trainingDays })}</div>
         </div>
       </div>
     </div>`;
-  showToast('⏳ Άνοιγμα εκτύπωσης...');
+  showToast(t('pdf_open_print'));
   setTimeout(() => window.print(), 400);
 }
 
@@ -5292,47 +5295,47 @@ function exportPDF_body() {
     <div style="padding:8mm 10mm;font-family:'Helvetica Neue',Arial,sans-serif">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:3px solid #f5c842">
         <div>
-          <div style="font-size:22px;font-weight:900;color:#111">Μετρήσεις Σώματος</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:3px">${p.name || ''}</div>
+          <div style="font-size:30px;font-weight:900;color:#111">${t('pdf_body_title')}</div>
+          <div style="font-size:14px;color:#6b7280;margin-top:3px">${p.name || ''}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <img src="logo.png" alt="" style="height:22px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
-          <span style="font-size:20px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="logo.png" alt="" style="height:66px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
+          <span style="font-size:54px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
         </div>
       </div>
 
       ${latest ? `<div style="display:flex;gap:14px;margin-bottom:18px">
         <div style="background:#eff6ff;border-radius:10px;padding:12px 18px;text-align:center;flex:1">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Τελευταίο Βάρος</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('pdf_last_weight')}</div>
           <div style="font-size:24px;font-weight:900;color:#3b82f6">${latest.weight} kg</div>
-          <div style="font-size:10px;color:#9ca3af">${latest.date}</div>
+          <div style="font-size:12px;font-weight:700;color:#374151;margin-top:2px">${latest.date}</div>
         </div>
         ${latest.fat !== null && latest.fat !== undefined ? `<div style="background:#fef2f2;border-radius:10px;padding:12px 18px;text-align:center;flex:1">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">% Λίπους</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('pdf_fat_pct')}</div>
           <div style="font-size:24px;font-weight:900;color:#ef4444">${latest.fat}%</div>
         </div>` : ''}
         ${latest.muscle !== null && latest.muscle !== undefined ? `<div style="background:#f0fdf4;border-radius:10px;padding:12px 18px;text-align:center;flex:1">
-          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">% Μυϊκής Μάζας</div>
+          <div style="font-size:10px;color:#6b7280;margin-bottom:4px">${t('pdf_muscle_pct')}</div>
           <div style="font-size:24px;font-weight:900;color:#16a34a">${latest.muscle}%</div>
         </div>` : ''}
       </div>` : ''}
 
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden">
-        <div style="padding:12px 14px;font-size:13px;font-weight:800;color:#111;border-bottom:1px solid #e5e7eb">Ιστορικό Μετρήσεων</div>
+        <div style="padding:12px 14px;font-size:13px;font-weight:800;color:#111;border-bottom:1px solid #e5e7eb">${t('pdf_body_history')}</div>
         <table style="width:100%;border-collapse:collapse">
           <thead>
             <tr style="background:#f8fafc">
-              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">ΗΜΕΡΟΜΗΝΙΑ</th>
-              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">ΒΑΡΟΣ</th>
-              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">% ΛΙΠΟΥΣ</th>
-              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">% ΜΥΪΚΗΣ</th>
+              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">${t('pdf_col_date').toUpperCase()}</th>
+              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">${t('pdf_col_weight').toUpperCase()}</th>
+              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">${t('pdf_col_fat').toUpperCase()}</th>
+              <th style="padding:9px 12px;text-align:left;font-size:11px;color:#475569;font-weight:700">${t('pdf_col_muscle').toUpperCase()}</th>
             </tr>
           </thead>
           <tbody>${logRows}</tbody>
         </table>
       </div>
     </div>`;
-  showToast('⏳ Άνοιγμα εκτύπωσης...');
+  showToast(t('pdf_open_print'));
   setTimeout(() => window.print(), 400);
 }
 
@@ -5387,7 +5390,7 @@ function exportPDF_week() {
         stroke-dasharray="${dash} ${circ}" stroke-linecap="round"
         transform="rotate(-90 ${cx} ${cy})"/>
       <text x="${cx}" y="${cy - 3}" text-anchor="middle" font-size="${size*0.17}" font-weight="900" fill="${col}">${pct}%</text>
-      <text x="${cx}" y="${cy + size*0.14}" text-anchor="middle" font-size="${size*0.085}" fill="#9ca3af">Μέση</text>
+      <text x="${cx}" y="${cy + size*0.14}" text-anchor="middle" font-size="${size*0.085}" fill="#9ca3af">${t('pdf_gauge_avg')}</text>
     </svg>`;
   }
 
@@ -5493,8 +5496,8 @@ function exportPDF_week() {
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
           ${weekRangePrint ? `<div style="font-size:8px;color:#6b7280">${weekRangePrint}</div>` : ''}
           <div style="display:flex;align-items:center;gap:5px">
-            <img src="logo.png" alt="" style="height:16px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
-            <span style="font-size:15px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
+            <img src="logo.png" alt="" style="height:48px;width:auto;object-fit:contain;opacity:0.85" onerror="this.style.display='none'">
+            <span style="font-size:45px;font-weight:900;background:linear-gradient(135deg,#f5c842 0%,#ffd700 40%,#b8860b 70%,#f5c842 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px">VIVON</span>
           </div>
         </div>
       </div>
@@ -5546,7 +5549,7 @@ function exportPDF_week() {
           <div style="font-size:12px;margin-bottom:1px">🎯</div>
           <div style="font-size:6.5px;color:#9ca3af;margin-bottom:1px">${t('week_goal_progress')}</div>
           <div style="font-size:10px;font-weight:900;color:${parseFloat(weightChangeW) <= 0 ? '#22c55e' : '#ef4444'}">${parseFloat(weightChangeW) > 0 ? '+' : ''}${weightChangeW} kg</div>
-          <div style="font-size:6.5px;color:#9ca3af">Αυτή την εβδομάδα</div>
+          <div style="font-size:6.5px;color:#9ca3af">${t('pdf_this_week')}</div>
         </div>
       </div>
     </div>`;
@@ -5558,7 +5561,7 @@ function exportPDF_week() {
       * { box-sizing: border-box; }
     </style>
     ${summaryPage}`;
-  showToast('⏳ Άνοιγμα εκτύπωσης...');
+  showToast(t('pdf_open_print'));
   setTimeout(() => window.print(), 400);
 }
 

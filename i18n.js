@@ -87,6 +87,35 @@ const I18N = {
   donate_subtitle: { el: 'Αν σου αρέσει η εφαρμογή, μπορείς να με στηρίξεις με μια μικρή δωρεά!', en: 'If you enjoy the app, you can support me with a small donation!', es: 'Si te gusta la app, ¡puedes apoyarme con una pequeña donación!', fr: 'Si vous aimez l\'application, vous pouvez me soutenir avec un petit don !' },
   donate_revolut:  { el: '🔄 Δωρεά μέσω Revolut', en: '🔄 Donate via Revolut', es: '🔄 Donar vía Revolut', fr: '🔄 Don via Revolut' },
   donate_thanks:   { el: 'Κάθε βοήθεια μετράει! 🙏', en: 'Every bit helps! 🙏', es: '¡Cualquier ayuda cuenta! 🙏', fr: 'Chaque aide compte ! 🙏' },
+  donate_drawer:   { el: 'Υποστήριξε το VIVON', en: 'Support VIVON', es: 'Apoya VIVON', fr: 'Soutenez VIVON' },
+  donate_sidebar:  { el: '❤️ Υποστήριξη', en: '❤️ Support', es: '❤️ Apoyo', fr: '❤️ Soutien' },
+
+  // ── PDF hardcoded strings ──
+  pdf_meal_col:       { el: 'ΓΕΥΜΑ',            en: 'MEAL',         es: 'COMIDA',        fr: 'REPAS' },
+  pdf_recipe_col:     { el: 'ΣΥΝΤΑΓΗ / ΠΕΡΙΓΡΑΦΗ', en: 'RECIPE / DESCRIPTION', es: 'RECETA / DESCRIPCIÓN', fr: 'RECETTE / DESCRIPTION' },
+  pdf_time_col:       { el: 'ΩΡΑ',              en: 'TIME',         es: 'HORA',          fr: 'HEURE' },
+  pdf_day_total:      { el: 'ΣΥΝΟΛΟ ΗΜΕΡΑΣ',    en: 'DAY TOTAL',    es: 'TOTAL DÍA',     fr: 'TOTAL JOURNÉE' },
+  pdf_stats_title:    { el: 'Στατιστικά Εβδομάδας', en: 'Weekly Statistics', es: 'Estadísticas Semanales', fr: 'Statistiques Hebdomadaires' },
+  pdf_stats_subtitle: { el: 'Αναλυτική αναφορά', en: 'Detailed report', es: 'Informe detallado', fr: 'Rapport détaillé' },
+  pdf_per_day:        { el: 'Ανά Ημέρα',        en: 'Per Day',      es: 'Por Día',       fr: 'Par Jour' },
+  pdf_col_day:        { el: 'ΗΜΕΡΑ',            en: 'DAY',          es: 'DÍA',           fr: 'JOUR' },
+  pdf_col_activity:   { el: 'ΔΡΑΣΤΗΡΙΟΤΗΤΑ',    en: 'ACTIVITY',     es: 'ACTIVIDAD',     fr: 'ACTIVITÉ' },
+  pdf_col_balance:    { el: 'ΙΣΟΖΥΓΙΟ',         en: 'BALANCE',      es: 'BALANCE',       fr: 'BILAN' },
+  pdf_steps_kcal:     { el: 'Βήματα (εβδ. kcal)', en: 'Steps (weekly kcal)', es: 'Pasos (kcal sem.)', fr: 'Pas (kcal sem.)' },
+  pdf_gym_kcal:       { el: 'Γυμναστήριο (kcal)', en: 'Gym (kcal)', es: 'Gimnasio (kcal)', fr: 'Salle (kcal)' },
+  pdf_workouts:       { el: '{n}/7 προπονήσεις', en: '{n}/7 workouts', es: '{n}/7 entrenamientos', fr: '{n}/7 entraînements' },
+  pdf_body_title:     { el: 'Μετρήσεις Σώματος', en: 'Body Measurements', es: 'Medidas Corporales', fr: 'Mesures Corporelles' },
+  pdf_last_weight:    { el: 'Τελευταίο Βάρος',  en: 'Last Weight',  es: 'Último Peso',   fr: 'Dernier Poids' },
+  pdf_fat_pct:        { el: '% Λίπους',         en: '% Body Fat',   es: '% Grasa',       fr: '% Graisse' },
+  pdf_muscle_pct:     { el: '% Μυϊκής Μάζας',   en: '% Muscle Mass', es: '% Masa Muscular', fr: '% Masse Musculaire' },
+  pdf_body_history:   { el: 'Ιστορικό Μετρήσεων', en: 'Measurement History', es: 'Historial de Medidas', fr: 'Historique des Mesures' },
+  pdf_col_date:       { el: 'ΗΜΕΡΟΜΗΝΙΑ',       en: 'DATE',         es: 'FECHA',         fr: 'DATE' },
+  pdf_col_weight:     { el: 'ΒΑΡΟΣ',            en: 'WEIGHT',       es: 'PESO',          fr: 'POIDS' },
+  pdf_col_fat:        { el: '% ΛΙΠΟΥΣ',         en: '% BODY FAT',   es: '% GRASA',       fr: '% GRAISSE' },
+  pdf_col_muscle:     { el: '% ΜΥΪΚΗΣ',         en: '% MUSCLE',     es: '% MUSCULAR',    fr: '% MUSCULAIRE' },
+  pdf_gauge_avg:      { el: 'Μέση',             en: 'Avg',          es: 'Med.',          fr: 'Moy.' },
+  pdf_this_week:      { el: 'Αυτή την εβδομάδα', en: 'This week',   es: 'Esta semana',   fr: 'Cette semaine' },
+  pdf_open_print:     { el: '⏳ Άνοιγμα εκτύπωσης...', en: '⏳ Opening print...', es: '⏳ Abriendo impresión...', fr: '⏳ Ouverture impression...' },
 
   // ── Disclaimer (shown at registration) ──
   disclaimer_title: {
@@ -740,7 +769,9 @@ function updateUILanguage() {
   _setTextContent('#sidebar-user-sub', t('sidebar_subtitle'));
 
   // Sidebar footer buttons
-  const sidebarPDF = document.querySelector('.sidebar-footer .btn:first-child');
+  const sidebarDonate = document.getElementById('sidebar-donate-btn');
+  if (sidebarDonate) sidebarDonate.textContent = '♥ ' + t('donate_sidebar').replace(/^❤️\s*/, '');
+  const sidebarPDF = document.getElementById('sidebar-pdf-btn');
   if (sidebarPDF) sidebarPDF.textContent = t('sidebar_pdf');
   const sidebarLogout = document.querySelector('.sidebar-footer .btn:last-child');
   if (sidebarLogout) sidebarLogout.textContent = t('sidebar_logout');
@@ -757,6 +788,9 @@ function updateUILanguage() {
   _setDrawerLabel('body',     t('nav_body'));
   _setDrawerLabel('stats',    t('nav_stats'));
   _setDrawerLabel('settings', t('nav_settings'));
+  // Drawer donate label
+  const drawerDonateLabel = document.querySelector('.drawer-item-donate .drawer-item-label');
+  if (drawerDonateLabel) drawerDonateLabel.textContent = t('donate_drawer');
 
   // Re-render whichever page is currently active
   const activePages = {
