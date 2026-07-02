@@ -4281,13 +4281,11 @@ function filterSupplementsCat(cat) {
 
 function showCustomSuppForm() {
   document.getElementById('supp-custom-form').style.display = '';
-  document.getElementById('supp-custom-add-btn').style.display = 'none';
   document.getElementById('supp-custom-name').focus();
 }
 
 function cancelCustomSupp() {
   document.getElementById('supp-custom-form').style.display = 'none';
-  document.getElementById('supp-custom-add-btn').style.display = '';
   ['supp-custom-name','supp-custom-qty','supp-custom-timing'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
@@ -5982,26 +5980,18 @@ function renderSettingsSupplements() {
             transition:all 0.15s">${lbl}</button>`
         ).join('')}
       </div>
-      <div id="supp-list">
-      ${[...SUPPLEMENTS_LIBRARY].sort((a,b) => (tName(a)||a.name).localeCompare(tName(b)||b.name)).map(s => {
-        const isActive = activeIds.includes(s.id);
-        return `<div class="card card-sm supp-item" data-cat="${s.category||'personal'}" data-name="${(tName(s)||s.name).toLowerCase()}" style="margin-bottom:8px;padding:10px 14px;display:grid;grid-template-columns:1fr 52px;align-items:center;gap:10px">
-          <div style="min-width:0">
-            <div style="font-size:0.88rem;font-weight:700">${tName(s)}</div>
-            <div style="font-size:0.7rem;color:var(--text3);margin-top:1px">${tName(s,'timing')} · ${tName(s,'qty')}</div>
-            <div style="font-size:0.68rem;margin-top:3px">${tName(s,'ideal')}</div>
-          </div>
-          <label class="toggle-switch" style="justify-self:end;flex-shrink:0">
-            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleSuppActive('${s.id}')">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>`;
-      }).join('')}
-      </div>
-
-      <!-- Custom supplements -->
-      <div style="margin-top:18px;margin-bottom:6px">
-        <div style="font-size:0.78rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px">${t('supp_custom_title')}</div>
+      <!-- Custom supplements (above library) -->
+      <div style="margin-bottom:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:0.78rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em">${t('supp_custom_title')}</div>
+          <!-- Mobile: icon only; Desktop: full text button -->
+          <button id="supp-custom-add-btn" onclick="showCustomSuppForm()"
+            style="display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text2);font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;flex-shrink:0"
+            onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green-d)';this.style.background='var(--green-bg)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)';this.style.background='var(--bg2)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="supp-add-label">${t('supp_custom_add')}</span>
+          </button>
+        </div>
         <div id="supp-custom-list">
           ${(state.supplements.custom||[]).map(s => {
             const isActive = activeIds.includes(s.id);
@@ -6039,12 +6029,23 @@ function renderSettingsSupplements() {
             </div>
           </div>
         </div>
-        <button id="supp-custom-add-btn" onclick="showCustomSuppForm()"
-          style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1.5px dashed var(--border);background:transparent;color:var(--text2);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px"
-          onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green-d)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          ${t('supp_custom_add')}
-        </button>
+      </div>
+
+      <div id="supp-list">
+      ${[...SUPPLEMENTS_LIBRARY].sort((a,b) => (tName(a)||a.name).localeCompare(tName(b)||b.name)).map(s => {
+        const isActive = activeIds.includes(s.id);
+        return `<div class="card card-sm supp-item" data-cat="${s.category||'personal'}" data-name="${(tName(s)||s.name).toLowerCase()}" style="margin-bottom:8px;padding:10px 14px;display:grid;grid-template-columns:1fr 52px;align-items:center;gap:10px">
+          <div style="min-width:0">
+            <div style="font-size:0.88rem;font-weight:700">${tName(s)}</div>
+            <div style="font-size:0.7rem;color:var(--text3);margin-top:1px">${tName(s,'timing')} · ${tName(s,'qty')}</div>
+            <div style="font-size:0.68rem;margin-top:3px">${tName(s,'ideal')}</div>
+          </div>
+          <label class="toggle-switch" style="justify-self:end;flex-shrink:0">
+            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleSuppActive('${s.id}')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>`;
+      }).join('')}
       </div>
       ` : ''}
     </div>`;

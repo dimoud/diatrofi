@@ -3156,6 +3156,11 @@ input[type="number"] { -moz-appearance: textfield; }
 }
 .onboarding-next:hover { opacity: .88; }
 
+/* ── SUPPLEMENT ADD BUTTON ── */
+@media (max-width: 1023px) {
+  .supp-add-label { display: none; }
+}
+
 /* ── LEGAL FOOTER ── */
 .app-footer {
   text-align: center;

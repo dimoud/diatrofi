@@ -478,7 +478,7 @@ const I18N = {
   supp_cat_fatburn:  { el: '🔥 Λιποδιάλυση',  en: '🔥 Fat Burn',   es: '🔥 Quemagrasas', fr: '🔥 Brûle-graisses' },
   supp_cat_personal: { el: '⭐ Προσωπικά',     en: '⭐ Personal',   es: '⭐ Personal',   fr: '⭐ Personnel' },
   supp_custom_title:       { el: 'Τα δικά μου συμπληρώματα', en: 'My supplements',        es: 'Mis suplementos',       fr: 'Mes suppléments' },
-  supp_custom_add:         { el: '+ Προσθήκη συμπληρώματος', en: '+ Add supplement',       es: '+ Añadir suplemento',   fr: '+ Ajouter un supplément' },
+  supp_custom_add:         { el: 'Προσθήκη συμπληρώματος', en: 'Add supplement',       es: 'Añadir suplemento',   fr: 'Ajouter un supplément' },
   supp_custom_save:        { el: 'Αποθήκευση',               en: 'Save',                   es: 'Guardar',               fr: 'Enregistrer' },
   supp_custom_cancel:      { el: 'Ακύρωση',                  en: 'Cancel',                 es: 'Cancelar',              fr: 'Annuler' },
   supp_custom_delete:      { el: 'Διαγραφή',                 en: 'Delete',                 es: 'Eliminar',              fr: 'Supprimer' },
